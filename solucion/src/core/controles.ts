@@ -144,7 +144,7 @@ export function revisarRc3(ctx: Contexto): Hallazgo[] {
   } else if (centro !== null && centro.aprobadores.length > 0) {
     const conMayorTope = centro.aprobadores.reduce((a, b) => (b.tope > a.tope ? b : a))
     tope = conMayorTope.tope
-    quien = `el tope más alto de ${centroEtiqueta(ctx)} (${conMayorTope.nombre})`
+    quien = `el tope más alto de ${centroEtiqueta(ctx)}: ${conMayorTope.nombre}`
   }
   if (tope === null) return []
   if (solicitud.valor_total <= tope) return []
@@ -153,7 +153,7 @@ export function revisarRc3(ctx: Contexto): Hallazgo[] {
     {
       codigo: "RC3",
       tipo: "bloqueo",
-      detalle: `${importe(solicitud.valor_total, solicitud.moneda)} supera ${importe(tope, solicitud.moneda)} de ${quien}`,
+      detalle: `${importe(solicitud.valor_total, solicitud.moneda)} supera ${importe(tope, solicitud.moneda)}: ${quien}`,
       accion_sugerida:
         "escalar la aprobación a un aprobador con tope mayor o dividir la compra en varias órdenes",
     },

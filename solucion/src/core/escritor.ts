@@ -26,6 +26,13 @@ export interface Escritor {
   borrar(...relativa: string[]): Resultado<string>
   /** Asegura que una carpeta existe y devuelve su ruta. */
   asegurarCarpeta(...relativa: string[]): Resultado<string>
+  /**
+   * Vacía la raíz del confinamiento y devuelve cuántas entradas borró.
+   * `excepto` conserva nombres de primer nivel (`log.jsonl` en la demo, para no
+   * perder la traza entre pasadas). Es lo que hace que dos ejecuciones seguidas
+   * de `demo.ts` den el mismo resultado (PRD §8 · Determinismo).
+   */
+  limpiar(excepto?: readonly string[]): Resultado<number>
 }
 
 /** Ruta absoluta de un destino relativo, validada contra la raíz. */
@@ -93,5 +100,25 @@ export function crearEscritor(raiz: string): Escritor {
     }
   }
 
-  return { raiz: absoluta, escribir, anexar, borrar, asegurarCarpeta }
+  /**
+   * Borra lo que hay en `raiz`, conservando lo que se indique. Si la carpeta no
+   * existe todavía no hay nada que limpiar y se devuelve `0`.
+   */
+  function limpiar(excepto: readonly string[] = []): Resultado<number> {
+    if (!fs.existsSync(absoluta)) return { ok: true, data: 0 }
+    const conservar = new Set(excepto)
+    let borradas = 0
+    try {
+      for (const entrada of fs.readdirSync(absoluta)) {
+        if (conservar.has(entrada)) continue
+        fs.rmSync(path.join(absoluta, entrada), { recursive: true, force: true })
+        borradas += 1
+      }
+    } catch {
+      return { ok: false, error: "no se pudo limpiar la carpeta de salida" }
+    }
+    return { ok: true, data: borradas }
+  }
+
+  return { raiz: absoluta, escribir, anexar, borrar, asegurarCarpeta, limpiar }
 }
