@@ -316,8 +316,8 @@ npm run typecheck   # 0 errores, cero any
 | `payload.test.ts` | El contrato del PRD §7.4 validado con `zod`, la huella de la evidencia, el recorte del texto breve y las excepciones firmadas | ✅ 11 |
 | `sap.test.ts` | Numeración correlativa desde `4500000001`, idempotencia por referencia, proveedor inactivo y payload rechazado | ✅ 7 |
 | `control.test.ts` | `out/control.csv`: cabecera, filas anexadas, marca de retroactiva y campos con comas | ✅ 6 |
-| `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación y las dos puertas de `oc_crear` | ✅ 17 |
-| `demo.test.ts` | Los 6 casos de punta a punta, la confirmación humana, que repetir la demo no duplica OC y el determinismo entre corridas | ✅ 7 |
+| `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación y las dos puertas de `oc_crear` | ✅ 18 |
+| `demo.test.ts` | Los 6 casos de punta a punta, la confirmación humana, que repetir la demo no duplica OC y el determinismo entre corridas | ✅ 6 |
 | `escritor.test.ts` | El confinamiento a `out/` (un `../` se rechaza), la escritura atómica y `limpiar` conservando el log | ✅ 6 |
 | `bucle.test.ts` | CA1–CA5: topes, confirmación solo con un «sí» explícito, auditoría y error del proveedor sin matar la sesión | F3 |
 | `api.test.ts` · `front-navegador.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos) y `app.js` ejecutándose en un DOM mínimo | F3 · F4 |
