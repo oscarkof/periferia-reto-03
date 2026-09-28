@@ -84,9 +84,10 @@ servidor; cambiar el trato del agente no recompila nada.
 autocontenido: analista → front → API → agente → herramientas → motor determinista → SAP simulado, con el
 paquete del caso, los maestros, las reglas del entorno y `out/` como almacenes. Se abre con doble clic (sin
 servidor ni dependencias), trae tema claro/oscuro y **cada nodo enlaza a la línea exacta que lo sostiene**
-—código o documento— en la revisión `61d0eed` del repositorio: así el diagrama no puede quedarse descolgado
-del código sin que se note (por ejemplo `oc_crear` apunta a `src/sap/mock.ts:101` y el motor a
-`src/core/controles.ts:309`).
+—código o documento— en la revisión `fb5a726` del repositorio: así el diagrama no puede quedarse descolgado
+del código sin que se note (por ejemplo `front` apunta a `solucion/web/app.js:353` —la función que manda el
+turno y lee el stream—, `agente` a `solucion/src/agent/paso.ts:33` —la puerta de confirmación de CA3— y
+`oc_crear` a `src/sap/mock.ts:101`).
 
 Se generó con la skill **archify** sobre este repositorio y pasó sus cuatro gates automáticos (`validate`,
 `deliver`, `check` y `browser-check`, este último en un navegador real; los comprobantes quedan en
