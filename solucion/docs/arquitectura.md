@@ -84,9 +84,10 @@ servidor; cambiar el trato del agente no recompila nada.
 autocontenido: analista → front → API → agente → herramientas → motor determinista → SAP simulado, con el
 paquete del caso, los maestros, las reglas del entorno y `out/` como almacenes. Se abre con doble clic (sin
 servidor ni dependencias), trae tema claro/oscuro y **cada nodo enlaza a la línea exacta que lo sostiene**
-—código o documento— en la revisión `61d0eed` del repositorio: así el diagrama no puede quedarse descolgado
-del código sin que se note (por ejemplo `oc_crear` apunta a `src/sap/mock.ts:101` y el motor a
-`src/core/controles.ts:309`).
+—código o documento— en la revisión `fb5a726` del repositorio: así el diagrama no puede quedarse descolgado
+del código sin que se note (por ejemplo `front` apunta a `solucion/web/app.js:353` —la función que manda el
+turno y lee el stream—, `agente` a `solucion/src/agent/paso.ts:33` —la puerta de confirmación de CA3— y
+`oc_crear` a `src/sap/mock.ts:101`).
 
 Se generó con la skill **archify** sobre este repositorio y pasó sus cuatro gates automáticos (`validate`,
 `deliver`, `check` y `browser-check`, este último en un navegador real; los comprobantes quedan en
@@ -397,7 +398,7 @@ reto-03/                              raíz del repo y del entregable (.zip = es
 | `demo.test.ts` | El recorrido completo de los 6 casos y que repetirlo no crea OC nuevas |
 | `bucle.test.ts` | El ciclo: topes (CA1), confirmación solo con un «sí» (CA3), auditoría (CA2), error del proveedor (CA5) | F3 ✅ |
 | `api.test.ts` | Las rutas del PRD §6.4 con `inject()`: chat JSON y SSE, sesión persistida, errores claros y ninguna respuesta con la clave | F3 ✅ |
-| `front-navegador.test.ts` | `web/app.js` ejecutándose en un DOM mínimo contra el backend real |
+| `front-navegador.test.ts` | `web/app.js` ejecutándose en un DOM mínimo (`test-utils/front.ts`) contra el backend real con `inject()`: arranque, tarjetas de herramienta, banda de confirmación (CA3), descargas de `out/` y fallos | F4 ✅ |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las **mismas piezas** que usa la aplicación (F6) |
 
 Las pruebas escriben en un `OUT_DIR` temporal: **nunca** tocan el `out/` del repositorio ni los fixtures.

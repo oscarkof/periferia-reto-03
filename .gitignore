@@ -104,6 +104,12 @@ desktop.ini
 # el que se copia a docs/diagramas/.
 .archify/
 
+# Los comprobantes de las puertas de archify (validate · deliver · check ·
+# browser-check) se escriben junto al diagrama, pero son artefactos de la
+# herramienta: el entregable es el HTML, que sí se versiona.
+*.delivery.json
+*.delivery-pending.json
+
 # ── Modelos locales de LLM ───────────────────────────────────────────────────
 # Ollama guarda los modelos en ~/.ollama; aquí solo evitamos restos accidentales.
 .ollama/

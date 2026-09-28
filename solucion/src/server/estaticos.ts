@@ -1,59 +1,133 @@
 /**
- * Front y archivos servidos por HTTP (PRD §6.1).
+ * Front y archivos servidos por HTTP (PRD §6.1 y §6.4).
  *
- * El front del chat llega en **F4**. Hasta entonces, `GET /` no devuelve un 404
- * (que parece una instalación rota) sino una página mínima que explica dónde está
- * la API y cómo probarla con `curl`. Cuando `web/` exista, se sirve tal cual.
+ * Dos responsabilidades:
+ *
+ *   · `raizFront` — la carpeta `web/` si está en el repositorio. El front es HTML,
+ *     CSS y JavaScript sin build, así que el servidor lo sirve tal cual.
+ *   · `leerDeOut` y `listarOut` — lo que el motor deja en `out/` (el log de
+ *     control, la evidencia, las órdenes del simulador). Todo el acceso está
+ *     **confinado a `out/`**: ni el caso ni el resto de la ruta pueden escapar del
+ *     directorio de salida, aunque vengan de la URL.
  */
-import fastifyStatic from "@fastify/static"
 import fs from "node:fs"
 import path from "node:path"
-import type { FastifyInstance } from "fastify"
+import { dirOut, resolverDentro } from "../core/rutas.ts"
+import type { Resultado } from "../core/tipos.ts"
 
-/** Página provisional mientras el front no esté en el repositorio. */
-function paginaProvisional(): string {
-  return `<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agente de órdenes de compra · API</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 3rem auto; max-width: 42rem; line-height: 1.5; padding: 0 1rem; }
-      code { background: #f3f3f3; padding: .1rem .3rem; border-radius: 3px; }
-      pre { background: #f3f3f3; padding: .8rem; overflow-x: auto; border-radius: 6px; }
-    </style>
-  </head>
-  <body>
-    <h1>Agente de órdenes de compra</h1>
-    <p>La API está en pie. El front del chat se publica en la siguiente entrega (F4).</p>
-    <ul>
-      <li><code>GET /api/health</code> · proveedor, herramientas y topes</li>
-      <li><code>GET /api/sessions</code> · conversaciones guardadas</li>
-      <li><code>GET /api/sessions/:id</code> · una conversación completa</li>
-      <li><code>POST /api/chat</code> · <code>{ "sessionId": "…", "message": "procesa sol-004" }</code> (SSE; añade <code>?json=1</code> para una respuesta única)</li>
-    </ul>
-    <pre>curl -s localhost:3000/api/health
-curl -s "localhost:3000/api/chat?json=1" -H 'content-type: application/json' \\
-  -d '{"sessionId":"demo","message":"procesa sol-004"}'</pre>
-  </body>
-</html>
-`
+/** Ruta del front si existe, o `null` (la API funciona sin él). */
+export function raizFront(directorio: string): string | null {
+  const web = path.join(directorio, "web")
+  return fs.existsSync(web) ? web : null
+}
+
+/** Tipos que el agente produce, con su content-type. */
+const TIPOS: Record<string, string> = {
+  ".md": "text/plain; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".jsonl": "application/x-ndjson; charset=utf-8",
+  ".csv": "text/csv; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+}
+
+/** Content-type por extensión, con un valor neutro por defecto. */
+export function tipoDeContenido(ruta: string): string {
+  return TIPOS[path.extname(ruta).toLowerCase()] ?? "application/octet-stream"
+}
+
+/** Contenido de un archivo de `out/`, ya confinado. */
+export interface ArchivoServido {
+  contenido: Buffer
+  tipo: string
+  nombre: string
 }
 
 /**
- * Monta el front: `web/` si está en el repositorio, o la página provisional.
- * También sirve los archivos de `out/` bajo `/out/` cuando el front los pida, pero
- * solo si la carpeta existe (en el arranque puede no estar todavía).
+ * Lee un archivo de `out/` a partir de sus segmentos de ruta.
+ *
+ * La base es la misma que la del resto del motor (`dirOut`): respeta `OUT_DIR`, así
+ * que servir archivos y escribirlos apuntan siempre al mismo sitio.
  */
-export async function montarFront(app: FastifyInstance, directorio: string): Promise<void> {
-  const web = path.join(directorio, "web")
-  if (fs.existsSync(web)) {
-    await app.register(fastifyStatic, { root: web, prefix: "/" })
-    return
+export function leerDeOut(partes: string[]): Resultado<ArchivoServido> {
+  if (partes.length === 0) return { ok: false, error: "no se indicó ningún archivo" }
+
+  const ruta = resolverDentro(dirOut(), ...partes)
+  if (!ruta.ok) return { ok: false, error: "ruta no permitida: solo se sirven archivos de out/" }
+
+  try {
+    const estadistica = fs.statSync(ruta.data)
+    if (!estadistica.isFile()) return { ok: false, error: "la ruta no es un archivo" }
+    if (estadistica.size > 25 * 1024 * 1024) return { ok: false, error: "el archivo supera el tamaño permitido" }
+
+    return {
+      ok: true,
+      data: {
+        contenido: fs.readFileSync(ruta.data),
+        tipo: tipoDeContenido(ruta.data),
+        nombre: path.basename(ruta.data),
+      },
+    }
+  } catch {
+    return { ok: false, error: `no existe el archivo ${partes.join("/")} en out/` }
+  }
+}
+
+/** Un archivo de `out/`, tal como lo lista el panel lateral del chat. */
+export interface ArchivoListado {
+  /** Ruta relativa a `out/`, la que se pide a `/api/files/…`. */
+  ruta: string
+  nombre: string
+  bytes: number
+  modificado: string
+}
+
+/** Tope de archivos listados: `out/` es del motor, no un vertedero. */
+const MAX_ARCHIVOS = 200
+
+/**
+ * Lista los archivos de `out/` por orden alfabético.
+ * Se saltan los ocultos (`.gitkeep`) y se acota el recorrido, para que la lista
+ * del front no crezca sin control si alguien deja cosas ahí.
+ */
+export function listarOut(): Resultado<ArchivoListado[]> {
+  const raiz = dirOut()
+  const encontrados: ArchivoListado[] = []
+
+  const recorrer = (carpeta: string, prefijo: string): void => {
+    let entradas: fs.Dirent[]
+    try {
+      entradas = fs.readdirSync(carpeta, { withFileTypes: true })
+    } catch {
+      return
+    }
+
+    for (const entrada of entradas.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (encontrados.length >= MAX_ARCHIVOS) return
+      if (entrada.name.startsWith(".")) continue
+
+      const absoluta = path.join(carpeta, entrada.name)
+      const relativa = prefijo === "" ? entrada.name : `${prefijo}/${entrada.name}`
+
+      if (entrada.isDirectory()) {
+        recorrer(absoluta, relativa)
+        continue
+      }
+
+      try {
+        const estadistica = fs.statSync(absoluta)
+        encontrados.push({
+          ruta: relativa,
+          nombre: entrada.name,
+          bytes: estadistica.size,
+          modificado: estadistica.mtime.toISOString(),
+        })
+      } catch {
+        // Un archivo que desaparece entre `readdir` y `stat` no es un error.
+      }
+    }
   }
 
-  app.get("/", async (_peticion, reply) => {
-    return reply.type("text/html; charset=utf-8").send(paginaProvisional())
-  })
+  recorrer(raiz, "")
+  return { ok: true, data: encontrados }
 }
+
