@@ -52,22 +52,25 @@ queda **marcada** en el log de control.
 ## 0. Estado del entregable
 
 Este reto se construye por fases; el historial de commits las sigue una a una. Hoy el repositorio está en
-**F2 (herramientas y demo)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
+**F3 (agente, LLM y API)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
 estructura del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos
 documentos de diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros,
 **RC1–RC10**, derivados, payload validado con `zod`, evidencia y log de control), **`src/sap/`** (la interfaz
-`SapAdapter` del PRD y el simulador con idempotencia) y **`src/tools/` + `demo.ts`**: las cinco herramientas
-`oc_*` con su contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo. **118 pruebas en
-verde y `typecheck` sin errores.** Faltan el agente con la API (F3), el front (F4), el despliegue con
-`SOLUCION.md` (F5) y el módulo reutilizable (F6).
+`SapAdapter` del PRD y el simulador con idempotencia), **`src/tools/` + `demo.ts`** (las cinco herramientas
+`oc_*` con su contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo) y **`src/agent/` +
+`src/llm/` + `src/server.ts`**: el ciclo del agente con sus topes, tres proveedores tras una interfaz
+(`ollama`, `openai`, `mock`), el comportamiento en `agent/prompt.md`, el conocimiento del proceso en
+`src/knowledge/` y la API del chat con SSE. **136 pruebas en verde y `typecheck` sin errores.** Faltan el
+front (F4), el despliegue con `SOLUCION.md` (F5) y el módulo reutilizable (F6).
 
 | Fase | Feature | Rama | Qué entrega | Estado |
 |---|---|---|---|---|
 | **F0** | `setup` | `main` | Repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, arquitectura y README | ✅ **hecho** |
 | **F1** | `core` | `f01-core` | `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia, control) + `src/sap/` (interfaz y simulado) con **88 pruebas** | ✅ **hecho** |
 | **F2** | `tools` | `f02-tools` | `src/tools/` (las cinco `oc_*` + contrato y auditoría) y `demo.ts` con el recorrido de los 6 casos | ✅ **hecho** |
-| **F3** | `agente-llm-api` | `f03-agente-llm-api` | Ciclo del agente, adaptadores de proveedor (ollama/openai/mock), API HTTP con SSE y system prompt | ⏳ siguiente |
+| **F3** | `agente-llm-api` | `f03-agente-llm-api` | `src/agent/` (ciclo, sesión, confirmación, eventos), `src/llm/` (ollama/openai/mock), `src/server/` + API con SSE, `agent/prompt.md` y `src/knowledge/` · **136 pruebas** | ✅ **hecho** |
 | **F4** | `web` | `f04-web` | Front de chat: tool-calls visibles, banda de confirmación y descargas | ⏳ |
+
 | **F5** | `deploy-solucion` | `f05-deploy` | Docker, `SOLUCION.md` (12 secciones) y publicación del link | ⏳ |
 | **F6** | `modulo` (bonus) | `f06-modulo` | Agente empaquetado reutilizable + test de paridad con la app | ⏳ |
 
@@ -101,9 +104,9 @@ docker compose up --build     # front + API en http://127.0.0.1:3000
 |---|---|---|
 | `npm install` | ✅ funciona (94 paquetes) | — |
 | `npm run typecheck` | ✅ **0 errores**, cero `any` | — |
-| `npm test` | ✅ **118 pruebas**, sin modelo y sin red | F3→F6 (hasta ~140) |
+| `npm test` | ✅ **136 pruebas**, sin modelo y sin red | F4→F6 (hasta ~150) |
 | `npm run demo` | ✅ **los 6 casos**: 1 creada, 2 bloqueadas, 3 que esperan el «sí»; con `--confirmar` se crean las 3 y `sol-001` sale idempotente | — |
-| `npm run dev` | — | F3 (`LLM_PROVIDER=mock` no necesita nada instalado) |
+| `npm run dev` | ✅ **API del chat** en `http://127.0.0.1:3000` (SSE o `?json=1`); con `LLM_PROVIDER=mock` no necesita nada instalado | F4 (el front) |
 | `docker compose up --build` | — | F5 |
 | Leer la arquitectura ya decidida | ✅ | [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) |
 | Ver el plan por fases y los mensajes de commit | ✅ | [`solucion/docs/repo-setup.md`](solucion/docs/repo-setup.md) §5 |
@@ -231,7 +234,7 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
 ├── fixtures/reto-03/                 6 casos (correo, solicitud, cotización, aprobación y la
 │                                     factura del retroactivo) + 4 maestros
 └── solucion/                         la aplicación
-    ├── .env.example                  las 22 variables documentadas, sin valores                 [F0 ✅]
+    ├── .env.example                  las 23 variables documentadas, sin valores                 [F0 ✅]
     ├── .gitignore                    lo mínimo para reutilizar esta carpeta como base           [F0 ✅]
     ├── docs/                         arquitectura.md, repo-setup.md y el diagrama navegable        [F0 ✅]
     │                                 diagramas/arquitectura-reto03.html: front → API → agente →
@@ -241,15 +244,22 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
     ├── package-lock.json             versiones exactas (sí se versiona)                         [F1 ✅]
     ├── tsconfig.json                 TypeScript estricto, sin emitir                            [F1 ✅]
     ├── demo.ts                       los 6 casos sin modelo: idempotencia y confirmación       [F2 ✅]
-    ├── agent/prompt.md               comportamiento del agente (system prompt)                    [F3]
-    ├── src/knowledge/                conocimiento del proceso que el agente consulta              [F3]
+    ├── agent/prompt.md               comportamiento del agente (system prompt)                  [F3 ✅]
+    ├── src/knowledge/                conocimiento del proceso que el agente consulta            [F3 ✅]
+    │                                 (ordenes-compra.md: los maestros, RC1–RC10 y qué
+    │                                 es una OC retroactiva, en lenguaje de compras)
     ├── src/core/                     12 módulos deterministas: paquete, maestros, RC1–RC10,
     │                                 derivados, payload, evidencia, control…                     [F1 ✅]
     ├── src/sap/                      interfaz SapAdapter (PRD §7.4) + simulado sobre out/sap/    [F1 ✅]
     ├── src/tools/                    contrato.ts (PRD §6.2) · auditoria.ts (CA2) · oc.ts: las
     │                                 cinco herramientas `oc_*` y la P1 declarada sin implementar   [F2 ✅]
     ├── src/demo/                     la lógica del recorrido sin modelo (recorrido.ts)          [F2 ✅]
-    ├── src/agent/                    ciclo, sesiones y confirmación humana                         [F3]
+    ├── src/agent/                    loop.ts (ciclo y topes CA1) · paso.ts (las puertas CA2/CA3)
+    │                                 · sesion.ts (historial → out/sessions/) · confirmacion.ts
+    │                                 · eventos.ts (lo que ve el chat) · prompt.ts                [F3 ✅]
+    ├── src/llm/                      adapter.ts (la interfaz del PRD §6.1) · ollama.ts · openai.ts
+    │                                 · mock.ts (guion determinista) · fabrica.ts                 [F3 ✅]
+    ├── src/server.ts + src/server/   el arranque y la API: /api/chat (SSE o JSON), health…      [F3 ✅]
     ├── src/llm/                      adaptadores de proveedor (ollama · openai · mock)             [F3]
     ├── src/server.ts + src/server/   API HTTP, stream SSE y front estático                         [F3]
     ├── web/                          front de chat (HTML, CSS, JS sin build)                       [F4]
@@ -319,20 +329,23 @@ npm run typecheck   # 0 errores, cero any
 | `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación y las dos puertas de `oc_crear` | ✅ 18 |
 | `demo.test.ts` | Los 6 casos de punta a punta, la confirmación humana, que repetir la demo no duplica OC y el determinismo entre corridas | ✅ 6 |
 | `escritor.test.ts` | El confinamiento a `out/` (un `../` se rechaza), la escritura atómica y `limpiar` conservando el log | ✅ 6 |
-| `bucle.test.ts` | CA1–CA5: topes, confirmación solo con un «sí» explícito, auditoría y error del proveedor sin matar la sesión | F3 |
-| `api.test.ts` · `front-navegador.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos) y `app.js` ejecutándose en un DOM mínimo | F3 · F4 |
+| `bucle.test.ts` | CA1–CA5 con el proveedor `mock`: topes de iteraciones y de tokens, confirmación solo con un «sí» explícito, auditoría anti-alucinación y error del proveedor sin matar la sesión | ✅ 11 |
+| `api.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos): chat en JSON y en SSE, sesiones recuperables, errores claros y ninguna respuesta con claves ni rutas del servidor | ✅ 7 |
+| `front-navegador.test.ts` | `app.js` ejecutándose en un DOM mínimo contra el backend real | F4 |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las mismas piezas que usa la aplicación | F6 |
 
-Estado: **118 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
-de arriba suma 118. Las pruebas escriben siempre en un `OUT_DIR` temporal, así que **nunca** tocan el `out/`
-del repositorio ni los fixtures. El plan completo, suite por suite, está en
-[`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
+Estado: **136 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
+de arriba suma 136 (118 de F1 y F2 + 11 del ciclo + 7 de la API). Las pruebas escriben siempre en un `OUT_DIR`
+temporal, así que **nunca** tocan el `out/` del repositorio ni los fixtures. El plan completo, suite por
+suite, está en [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
+
 ---
+
 
 ## 7. Variables de entorno
 
 Ninguna tiene un valor secreto en el repositorio; todas están documentadas en
-[`solucion/.env.example`](solucion/.env.example) (**22 variables**: 14 activas y 8 documentadas como
+[`solucion/.env.example`](solucion/.env.example) (**23 variables**: 15 activas y 8 documentadas como
 opcionales) y ninguna se registra ni se devuelve por la API.
 
 | Variable | Por defecto | Para qué |
@@ -357,6 +370,7 @@ opcionales) y ninguna se registra ni se devuelve por la API.
 | `MAX_ITERACIONES` | `25` | Tope de iteraciones herramienta → modelo por turno (CA1) |
 | `MAX_TOKENS_SESION` | `200000` | Tope de gasto por sesión: un usuario no puede gastar la clave sin límite |
 | `LLM_TIMEOUT_MS` | `180000` | Timeout del proveedor: al agotarse, error legible y la sesión sigue viva (CA5) |
+| `USUARIO_ANALISTA` | `compras@periferia-ficticia.com` | Correo de quien confirma en el chat (CA3): es el que firma las excepciones, y sale de la sesión —nunca del modelo— |
 
 ---
 
