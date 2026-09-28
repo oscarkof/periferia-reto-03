@@ -111,7 +111,9 @@ async function principal(): Promise<void> {
   }
 
   // Dos ejecuciones seguidas tienen que dar el mismo resultado (PRD §8).
-  const limpieza = entorno.data.escritor.limpiar(["log.jsonl"])
+  // `.gitkeep` se conserva: git no versiona carpetas vacías y `out/` tiene que
+  // existir en el repo recién clonado aunque todavía no se haya generado nada.
+  const limpieza = entorno.data.escritor.limpiar([".gitkeep", "log.jsonl"])
   entorno.data.escritor.escribir("", "log.jsonl")
   console.log(
     `out/ limpiado al inicio (${limpieza.ok ? limpieza.data : "?"} entradas borradas) · ` +

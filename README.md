@@ -292,8 +292,8 @@ Las tres comprobaciones que el PRD pide explícitamente, y que la demo imprime:
 3. **Una fila por solicitud** — `out/control.csv` acaba con **6 filas** (no 12) aunque el recorrido se haga
    dos veces, y `out/resumen.json` sale sin timestamps para poder comparar corridas.
 
-`demo.ts` limpia `out/` al empezar (conservando `log.jsonl`, que trunca), así que dos ejecuciones
-consecutivas dan el mismo resultado.
+`demo.ts` limpia `out/` al empezar —conservando `.gitkeep`, para que la carpeta siga versionada, y
+truncando `log.jsonl`— así que dos ejecuciones consecutivas dan el mismo resultado.
 
 ---
 
