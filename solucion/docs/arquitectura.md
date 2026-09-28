@@ -179,7 +179,7 @@ Esta tabla es el contrato de F1 y F2 (el motor y las herramientas) y el guion de
 | **sol-003** | 74.000.000 COP · CC-2020 aprobado por `fvargas`, que es aprobador de **CC-3030** | **RC2 · bloqueo** (y RC3, porque 74M supera el tope de 30M del aprobador del centro) | No se crea. Se devuelve **las dos** razones, no solo la primera | O2 |
 | **sol-004** | 25.000.000 COP en la solicitud, **26.500.000** en la cotización (6 % de diferencia) · aprobado por `dgarcia` (tope 200M) | **RC5 · confirmación** con los dos valores | Se crea **solo tras el «sí»**; la excepción queda firmada en el payload y en el control | O3 |
 | **sol-005** | 3.200.000 COP · **factura del 2026-08-10** anterior a la solicitud del 2026-08-27 | **RC8 · confirmación** y `retroactiva = true` | Se crea solo con confirmación y queda **marcada** en `out/control.csv` | O4 |
-| **sol-006** | 5.400.000 COP · **sin `indicador_iva`**, **sin `condiciones_pago`** y **sin NIT** | **RC6** (deriva C1 del proveedor + confirmación) · **RC7** (deriva Z000, solo se informa) · **RC1** por nombre normalizado | Se crea tras confirmar el IVA derivado | O3 |
+| **sol-006** | 5.400.000 COP · **sin `indicador_iva`**, **sin `condiciones_pago`** y **sin NIT** | **RC6** (deriva C1 del proveedor + confirmación) · **RC7** (deriva Z030, solo se informa) · **RC1** por nombre normalizado | Se crea tras confirmar el IVA derivado | O3 |
 
 Dos derivaciones que el fixture obliga a resolver y que quedan fijadas aquí:
 
@@ -394,7 +394,7 @@ Las pruebas escriben en un `OUT_DIR` temporal: **nunca** tocan el `out/` del rep
 | Fase | Contenido | Criterio de salida |
 |---|---|---|
 | **F0** ✅ | Setup: repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, este documento, `repo-setup.md` y el README maestro | Árbol limpio, `git status` sin nada pendiente e ignores verificados con `git add -A --dry-run` |
-| **F1** | `package.json`, `tsconfig.json`, `src/core/` y `src/sap/` | `typecheck` en 0 y las suites de `core` en verde con los 6 casos y los bordes de RC1–RC10 |
+| **F1** ✅ | `package.json`, `tsconfig.json`, `src/core/` (12 módulos) y `src/sap/` | **Cumplido:** `npm run typecheck` en 0 y **88 pruebas en verde** con los 6 casos del fixture, los bordes de RC1–RC10, el payload validado con `zod` y el simulador idempotente |
 | **F2** | `src/tools/oc.ts` y `demo.ts` | `npm run demo` imprime los 6 casos con su desenlace y `sol-001` dos veces no crea dos OC |
 | **F3** | `src/agent/`, `src/llm/`, `src/server*`, `agent/prompt.md` y `src/knowledge/` | El prompt del PRD §11 contra el modelo real, con las llamadas visibles y la confirmación; CA1–CA5 cubiertos |
 | **F4** | `web/` | El recorrido de la demo se hace con ratón y `app.js` se prueba ejecutándose en un DOM mínimo |
