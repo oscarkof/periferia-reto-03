@@ -10,9 +10,10 @@
  * resolver «por NIT; si no hay NIT, por nombre normalizado».
  */
 import { z } from "zod"
+import path from "node:path"
 import { leerJson } from "./io.ts"
 import { claveNit, quitarFormaSocietaria } from "./normalizacion.ts"
-import { rutaMaestroArchivo } from "./rutas.ts"
+import { dirMaestros } from "./rutas.ts"
 import type {
   Aprobador,
   CentroCosto,
@@ -57,9 +58,9 @@ const EsquemaCondicionPago = z.object({
   dias: z.number().int().nonnegative(),
 })
 
-/** Carga uno de los cuatro maestros con su esquema y un error legible. */
-function cargar<T>(nombre: string, esquema: z.ZodType<T>): Resultado<T[]> {
-  const leido = leerJson<unknown>(rutaMaestroArchivo(nombre))
+/** Carga uno de los cuatro maestros de `dir` con su esquema y un error legible. */
+function cargar<T>(dir: string, nombre: string, esquema: z.ZodType<T>): Resultado<T[]> {
+  const leido = leerJson<unknown>(path.join(dir, `${nombre}.json`))
   if (!leido.ok) return leido
   const validado = z.array(esquema).safeParse(leido.data)
   if (!validado.success) {
@@ -71,15 +72,19 @@ function cargar<T>(nombre: string, esquema: z.ZodType<T>): Resultado<T[]> {
   return { ok: true, data: validado.data }
 }
 
-/** Carga los cuatro maestros de `maestros/`. */
-export function cargarMaestros(): Resultado<Maestros> {
-  const proveedores = cargar("proveedores", EsquemaProveedor)
+/**
+ * Carga los cuatro maestros. La carpeta es un parámetro para que las
+ * herramientas carguen los maestros del **entorno** que reciben (y las pruebas
+ * puedan montar maestros temporales sin tocar los del repositorio).
+ */
+export function cargarMaestros(dir: string = dirMaestros()): Resultado<Maestros> {
+  const proveedores = cargar(dir, "proveedores", EsquemaProveedor)
   if (!proveedores.ok) return proveedores
-  const centros = cargar("centros-costo", EsquemaCentro)
+  const centros = cargar(dir, "centros-costo", EsquemaCentro)
   if (!centros.ok) return centros
-  const indicadoresIva = cargar("indicadores-iva", EsquemaIndicadorIva)
+  const indicadoresIva = cargar(dir, "indicadores-iva", EsquemaIndicadorIva)
   if (!indicadoresIva.ok) return indicadoresIva
-  const condicionesPago = cargar("condiciones-pago", EsquemaCondicionPago)
+  const condicionesPago = cargar(dir, "condiciones-pago", EsquemaCondicionPago)
   if (!condicionesPago.ok) return condicionesPago
 
   return {

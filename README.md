@@ -40,6 +40,7 @@ queda **marcada** en el log de control.
 | Saber el stack y por qué cada pieza | [2. Stack](#2-stack-con-qué-está-hecho-y-por-qué) |
 | Entender la elección del modelo, con números | [3. El modelo](#3-el-modelo-elección-mediciones-y-costo) |
 | Saber qué hace cada archivo | [4. Estructura](#4-estructura-del-repositorio-archivo-por-archivo) |
+| Ver la arquitectura en un diagrama navegable | [`solucion/docs/diagramas/arquitectura-reto03.html`](solucion/docs/diagramas/arquitectura-reto03.html) |
 | Ver las herramientas sin modelo | [5. `demo.ts`](#5-demots-las-herramientas-sin-modelo) |
 | Correr las pruebas | [6. Pruebas](#6-pruebas-automáticas) |
 | Configurar el entorno | [7. Variables de entorno](#7-variables-de-entorno) |
@@ -51,20 +52,21 @@ queda **marcada** en el log de control.
 ## 0. Estado del entregable
 
 Este reto se construye por fases; el historial de commits las sigue una a una. Hoy el repositorio está en
-**F1 (motor determinista)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
+**F2 (herramientas y demo)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
 estructura del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos
 documentos de diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros,
-**RC1–RC10**, derivados, payload validado con `zod`, evidencia y log de control) y **`src/sap/`** (la
-interfaz `SapAdapter` del PRD y el simulador con idempotencia). **88 pruebas en verde y `typecheck` sin
-errores.** Faltan las herramientas con `demo.ts` (F2), el agente con la API (F3), el front (F4), el
-despliegue con `SOLUCION.md` (F5) y el módulo reutilizable (F6).
+**RC1–RC10**, derivados, payload validado con `zod`, evidencia y log de control), **`src/sap/`** (la interfaz
+`SapAdapter` del PRD y el simulador con idempotencia) y **`src/tools/` + `demo.ts`**: las cinco herramientas
+`oc_*` con su contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo. **118 pruebas en
+verde y `typecheck` sin errores.** Faltan el agente con la API (F3), el front (F4), el despliegue con
+`SOLUCION.md` (F5) y el módulo reutilizable (F6).
 
 | Fase | Feature | Rama | Qué entrega | Estado |
 |---|---|---|---|---|
 | **F0** | `setup` | `main` | Repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, arquitectura y README | ✅ **hecho** |
 | **F1** | `core` | `f01-core` | `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia, control) + `src/sap/` (interfaz y simulado) con **88 pruebas** | ✅ **hecho** |
-| **F2** | `tools` | `f02-tools` | Las seis herramientas `oc_*` con `zod` + `demo.ts` (los 6 casos sin modelo) | ⏳ siguiente |
-| **F3** | `agente-llm-api` | `f03-agente-llm-api` | Ciclo del agente, adaptadores de proveedor (ollama/openai/mock), API HTTP con SSE y system prompt | ⏳ |
+| **F2** | `tools` | `f02-tools` | `src/tools/` (las cinco `oc_*` + contrato y auditoría) y `demo.ts` con el recorrido de los 6 casos | ✅ **hecho** |
+| **F3** | `agente-llm-api` | `f03-agente-llm-api` | Ciclo del agente, adaptadores de proveedor (ollama/openai/mock), API HTTP con SSE y system prompt | ⏳ siguiente |
 | **F4** | `web` | `f04-web` | Front de chat: tool-calls visibles, banda de confirmación y descargas | ⏳ |
 | **F5** | `deploy-solucion` | `f05-deploy` | Docker, `SOLUCION.md` (12 secciones) y publicación del link | ⏳ |
 | **F6** | `modulo` (bonus) | `f06-modulo` | Agente empaquetado reutilizable + test de paridad con la app | ⏳ |
@@ -99,8 +101,8 @@ docker compose up --build     # front + API en http://127.0.0.1:3000
 |---|---|---|
 | `npm install` | ✅ funciona (94 paquetes) | — |
 | `npm run typecheck` | ✅ **0 errores**, cero `any` | — |
-| `npm test` | ✅ **88 pruebas**, sin modelo y sin red | F2→F6 (hasta ~120) |
-| `npm run demo` | — | F2 (**`6/6`** casos con su desenlace, `sol-001` dos veces sin duplicar) |
+| `npm test` | ✅ **118 pruebas**, sin modelo y sin red | F3→F6 (hasta ~140) |
+| `npm run demo` | ✅ **los 6 casos**: 1 creada, 2 bloqueadas, 3 que esperan el «sí»; con `--confirmar` se crean las 3 y `sol-001` sale idempotente | — |
 | `npm run dev` | — | F3 (`LLM_PROVIDER=mock` no necesita nada instalado) |
 | `docker compose up --build` | — | F5 |
 | Leer la arquitectura ya decidida | ✅ | [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) |
@@ -231,54 +233,67 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
 └── solucion/                         la aplicación
     ├── .env.example                  las 22 variables documentadas, sin valores                 [F0 ✅]
     ├── .gitignore                    lo mínimo para reutilizar esta carpeta como base           [F0 ✅]
-    ├── docs/                         arquitectura.md y repo-setup.md                            [F0 ✅]
+    ├── docs/                         arquitectura.md, repo-setup.md y el diagrama navegable        [F0 ✅]
+    │                                 diagramas/arquitectura-reto03.html: front → API → agente →
+    │                                 herramientas → motor → SAP simulado, con cada nodo enlazado
+    │                                 a la línea que lo sostiene
     ├── package.json                  dependencias, scripts y engines                            [F1 ✅]
     ├── package-lock.json             versiones exactas (sí se versiona)                         [F1 ✅]
     ├── tsconfig.json                 TypeScript estricto, sin emitir                            [F1 ✅]
-    ├── demo.ts                       los 6 casos sin modelo (PRD §6.6)                            [F2]
+    ├── demo.ts                       los 6 casos sin modelo: idempotencia y confirmación       [F2 ✅]
     ├── agent/prompt.md               comportamiento del agente (system prompt)                    [F3]
     ├── src/knowledge/                conocimiento del proceso que el agente consulta              [F3]
     ├── src/core/                     12 módulos deterministas: paquete, maestros, RC1–RC10,
     │                                 derivados, payload, evidencia, control…                     [F1 ✅]
     ├── src/sap/                      interfaz SapAdapter (PRD §7.4) + simulado sobre out/sap/    [F1 ✅]
-    ├── src/tools/                    las seis herramientas `oc_*`                                 [F2]
-    ├── src/demo/                     la lógica del recorrido sin modelo                            [F2]
+    ├── src/tools/                    contrato.ts (PRD §6.2) · auditoria.ts (CA2) · oc.ts: las
+    │                                 cinco herramientas `oc_*` y la P1 declarada sin implementar   [F2 ✅]
+    ├── src/demo/                     la lógica del recorrido sin modelo (recorrido.ts)          [F2 ✅]
     ├── src/agent/                    ciclo, sesiones y confirmación humana                         [F3]
     ├── src/llm/                      adaptadores de proveedor (ollama · openai · mock)             [F3]
     ├── src/server.ts + src/server/   API HTTP, stream SSE y front estático                         [F3]
     ├── web/                          front de chat (HTML, CSS, JS sin build)                       [F4]
-    ├── test/                         pruebas automáticas: **88 en verde**                        [F1 ✅]
+    ├── test/                         pruebas automáticas: **118 en verde**                       [F1–F2 ✅]
     ├── test-utils/                   utilidades y dobles de prueba (no son pruebas)               [F1 ✅]
     └── out/                          salida generada (solo su .gitkeep se versiona)
 ```
 
 ---
 
-## 5. `demo.ts`: las herramientas sin modelo (F2)
+## 5. `demo.ts`: las herramientas sin modelo (F2 ✅)
 
-Procesa los seis casos llamando **directamente** a las herramientas, sin modelo, sin claves y sin red. Es lo
+Procesa los seis casos llamando **directamente** a las herramientas —`oc_leer_paquete` → `oc_validar` →
+`oc_generar_evidencia` → `oc_construir_payload` → `oc_crear`— **sin modelo, sin claves y sin red**. Es lo
 primero que hay que correr para saber si el problema es el motor o el modelo:
 
 ```bash
 cd reto-03/solucion
-npm run demo
+npm run demo                # primera pasada: nada confirmado por una persona
+npm run demo -- --confirmar # segunda pasada: confirma lo que quedó pendiente (CA3)
 ```
 
 Lo que imprime, caso por caso (PRD §6.6):
 
-| Caso | Salida esperada |
+| Caso | Salida real de la demo |
 |---|---|
-| `sol-001` | `apta`, sin excepciones: **OC creada** (`4500000001`) con la ruta de la evidencia |
-| `sol-002` | **bloqueo RC1** (proveedor inexistente) y la acción sugerida · sin OC |
-| `sol-003` | **bloqueos RC2 y RC3** (aprobador sin autoridad en ese centro y monto sobre el tope) · sin OC |
-| `sol-004` | **confirmación RC5**: 25.000.000 frente a 26.500.000; con `--confirmar`, OC creada |
+| `sol-001` | `apta`, sin excepciones: **OC creada** (`4500000001`) con su evidencia en `out/evidencia/` |
+| `sol-002` | **bloqueo RC1** (proveedor inexistente) y la acción sugerida · sin OC, fila `bloqueada` en el control |
+| `sol-003` | **bloqueos RC2 y RC3** en el mismo pase (aprobador sin autoridad en ese centro **y** monto sobre el tope) · sin OC |
+| `sol-004` | **confirmación RC5**: 25.000.000 frente a 26.500.000; con `--confirmar`, OC creada y la excepción **firmada** |
 | `sol-005` | **confirmación RC8**: `retroactiva = true`; con confirmación, OC creada y **marcada** en `control.csv` |
 | `sol-006` | **RC6** derivado del proveedor (C1) + confirmación · **RC7** informado (Z030) · OC tras confirmar |
 
-Y las dos comprobaciones que el PRD pide explícitamente: **la idempotencia** (ejecutar `sol-001` dos veces
-seguidas **no** crea una segunda OC) y **una confirmación explícita** (`node demo.ts --confirmar`) para el
-caso que la necesita. `demo.ts` limpia `out/` al empezar, así que dos ejecuciones consecutivas dan el mismo
-resultado salvo los timestamps.
+Las tres comprobaciones que el PRD pide explícitamente, y que la demo imprime:
+
+1. **Idempotencia** — `sol-001` se procesa en las dos pasadas y la segunda devuelve `≈ ya existía: OC
+   4500000001`: no se crea otra ni se duplica su fila en `control.csv`.
+2. **Una confirmación explícita** — sin `--confirmar`, `sol-004`, `sol-005` y `sol-006` quedan en
+   `pendiente_confirmacion` y **no se escribe nada**: ni en SAP, ni en la evidencia, ni en el control.
+3. **Una fila por solicitud** — `out/control.csv` acaba con **6 filas** (no 12) aunque el recorrido se haga
+   dos veces, y `out/resumen.json` sale sin timestamps para poder comparar corridas.
+
+`demo.ts` limpia `out/` al empezar —conservando `.gitkeep`, para que la carpeta siga versionada, y
+truncando `log.jsonl`— así que dos ejecuciones consecutivas dan el mismo resultado.
 
 ---
 
@@ -301,14 +316,15 @@ npm run typecheck   # 0 errores, cero any
 | `payload.test.ts` | El contrato del PRD §7.4 validado con `zod`, la huella de la evidencia, el recorte del texto breve y las excepciones firmadas | ✅ 11 |
 | `sap.test.ts` | Numeración correlativa desde `4500000001`, idempotencia por referencia, proveedor inactivo y payload rechazado | ✅ 7 |
 | `control.test.ts` | `out/control.csv`: cabecera, filas anexadas, marca de retroactiva y campos con comas | ✅ 6 |
-| `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación | F2 |
-| `demo.test.ts` | Los 6 casos de punta a punta y que repetir la demo no duplica OC | F2 |
+| `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación y las dos puertas de `oc_crear` | ✅ 18 |
+| `demo.test.ts` | Los 6 casos de punta a punta, la confirmación humana, que repetir la demo no duplica OC y el determinismo entre corridas | ✅ 6 |
+| `escritor.test.ts` | El confinamiento a `out/` (un `../` se rechaza), la escritura atómica y `limpiar` conservando el log | ✅ 6 |
 | `bucle.test.ts` | CA1–CA5: topes, confirmación solo con un «sí» explícito, auditoría y error del proveedor sin matar la sesión | F3 |
 | `api.test.ts` · `front-navegador.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos) y `app.js` ejecutándose en un DOM mínimo | F3 · F4 |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las mismas piezas que usa la aplicación | F6 |
 
-Estado: **88 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
-de arriba suma 88. Las pruebas escriben siempre en un `OUT_DIR` temporal, así que **nunca** tocan el `out/`
+Estado: **118 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
+de arriba suma 118. Las pruebas escriben siempre en un `OUT_DIR` temporal, así que **nunca** tocan el `out/`
 del repositorio ni los fixtures. El plan completo, suite por suite, está en
 [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
 ---
@@ -363,7 +379,9 @@ proveedor y el modelo), así que un link público no filtraría credenciales.
    diseño de la integración real (OData, BAPI, Integration Suite o carga por archivo) es documentación
    obligatoria y vive en `SOLUCION.md` §6.
 3. **Sin lectura de binarios**: los fixtures entregan la solicitud normalizada a JSON y la cotización como
-   texto (PRD §7.1). Leer `.xlsx`/`.pdf` reales es P1 opcional (`oc_leer_excel`).
+   texto (PRD §7.1). La sexta herramienta (`oc_leer_excel`, P1 opcional) queda **declarada y no
+   implementada**: leer `.xlsx` exigiría una dependencia nueva para un requisito opcional, y el flujo real
+   llega ya normalizado. Está anotado también en `src/tools/oc.ts`.
 4. **Recepción de mercancía, registro de factura y pago**: fuera del alcance (PRD §2.3). La factura solo se
    mira para detectar el caso retroactivo.
 5. **El SAP simulado no soporta concurrencia**: dos procesos escribiendo `out/sap/` a la vez no están

@@ -78,6 +78,31 @@ Dos consecuencias del diseño que sostienen todo lo demás:
 *conocimiento* en `src/knowledge/`, *ejecución* en `src/tools/`. Cambiar una regla de negocio no toca el
 servidor; cambiar el trato del agente no recompila nada.
 
+### 1.1 Diagrama navegable
+
+[`diagramas/arquitectura-reto03.html`](diagramas/arquitectura-reto03.html) es este mismo recorrido como HTML
+autocontenido: analista → front → API → agente → herramientas → motor determinista → SAP simulado, con el
+paquete del caso, los maestros, las reglas del entorno y `out/` como almacenes. Se abre con doble clic (sin
+servidor ni dependencias), trae tema claro/oscuro y **cada nodo enlaza a la línea exacta que lo sostiene**
+—código o documento— en la revisión `61d0eed` del repositorio: así el diagrama no puede quedarse descolgado
+del código sin que se note (por ejemplo `oc_crear` apunta a `src/sap/mock.ts:101` y el motor a
+`src/core/controles.ts:309`).
+
+Se generó con la skill **archify** sobre este repositorio y pasó sus cuatro gates automáticos (`validate`,
+`deliver`, `check` y `browser-check`, este último en un navegador real; los comprobantes quedan en
+`.archify/`, que no se versiona):
+
+```bash
+cd reto-03
+node ~/.claude/skills/archify/bin/archify.mjs finalize architecture \
+  .archify/architecture-reto03-<fecha>/candidate.json \
+  solucion/docs/diagramas/arquitectura-reto03.html --repo-root . --quality showcase
+```
+
+La herramienta deja un aviso **opcional** de forma: tres conexiones usan un codo más del sugerido
+(`herramientas→motor`, `sap→out` y la vuelta de confirmación `agente→analista`). Es disposición, no
+contenido, y se documenta en vez de esconderlo.
+
 ---
 
 ## 2. Capas: qué hace cada una y por qué está separada
@@ -325,20 +350,21 @@ reto-03/                              raíz del repo y del entregable (.zip = es
     ├── .gitignore                    F0 ✅ · portabilidad de esta carpeta
     ├── docs/                         F0 ✅ · arquitectura.md y repo-setup.md
     ├── package.json · tsconfig.json  F1 · stack y contrato de calidad
-    ├── demo.ts                       F2 · los 6 casos sin modelo (PRD §6.6)
+    ├── demo.ts                       F2 ✅ · los 6 casos sin modelo (PRD §6.6)
     ├── agent/prompt.md               F3 · comportamiento del agente
     ├── src/knowledge/ordenes-compra.md  F3 · conocimiento del proceso
     ├── src/core/                     F1 · 12 módulos deterministas:
     │     rutas · io · tipos · paquete · maestros · controles · derivados ·
     │     payload · evidencia · control · csv · log
     ├── src/sap/adapter.ts · mock.ts  F1 · interfaz del PRD §7.4 + simulado sobre out/sap/
-    ├── src/tools/oc.ts               F2 · las seis herramientas `oc_*`
-    ├── src/demo/                     F2 · la lógica del recorrido sin modelo
+    ├── src/tools/                    F2 ✅ · contrato.ts (PRD §6.2), auditoria.ts (CA2) y
+    │                                        oc.ts (las cinco `oc_*`; la P1 declarada sin implementar)
+    ├── src/demo/                     F2 ✅ · la lógica del recorrido sin modelo
     ├── src/agent/                    F3 · ciclo, sesiones y confirmación humana
     ├── src/llm/                      F3 · adaptadores (ollama · openai · mock)
     ├── src/server.ts + src/server/   F3 · API HTTP, stream SSE y front estático
     ├── web/                          F4 · front de chat (HTML, CSS, JS sin build)
-    ├── test/                         F1–F6 · pruebas automáticas
+    ├── test/                         F1–F6 · pruebas automáticas (118 en verde tras F2)
     ├── test-utils/                   F1 · utilidades y dobles de prueba
     └── out/                          generado (solo su .gitkeep se versiona)
 ```
@@ -395,7 +421,7 @@ Las pruebas escriben en un `OUT_DIR` temporal: **nunca** tocan el `out/` del rep
 |---|---|---|
 | **F0** ✅ | Setup: repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, este documento, `repo-setup.md` y el README maestro | Árbol limpio, `git status` sin nada pendiente e ignores verificados con `git add -A --dry-run` |
 | **F1** ✅ | `package.json`, `tsconfig.json`, `src/core/` (12 módulos) y `src/sap/` | **Cumplido:** `npm run typecheck` en 0 y **88 pruebas en verde** con los 6 casos del fixture, los bordes de RC1–RC10, el payload validado con `zod` y el simulador idempotente |
-| **F2** | `src/tools/oc.ts` y `demo.ts` | `npm run demo` imprime los 6 casos con su desenlace y `sol-001` dos veces no crea dos OC |
+| **F2** ✅ | `src/tools/` (`contrato.ts`, `auditoria.ts`, `oc.ts` con las cinco `oc_*`) · `src/demo/recorrido.ts` · `demo.ts` | **Cumplido:** `npm run demo` imprime los 6 casos con su desenlace (primera pasada «1 creada · 2 bloqueadas · 3 pendientes»; con `--confirmar`, «3 creadas · 1 ya existía»), `sol-001` repetido **no** crea otra OC y `out/control.csv` queda con **6 filas** (una por solicitud, no por pasada). 118 pruebas y `typecheck` en 0 |
 | **F3** | `src/agent/`, `src/llm/`, `src/server*`, `agent/prompt.md` y `src/knowledge/` | El prompt del PRD §11 contra el modelo real, con las llamadas visibles y la confirmación; CA1–CA5 cubiertos |
 | **F4** | `web/` | El recorrido de la demo se hace con ratón y `app.js` se prueba ejecutándose en un DOM mínimo |
 | **F5** | `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `SOLUCION.md` (12 secciones) y el link | Un comando levanta todo, el contenedor queda *healthy* y `SOLUCION.md` no tiene secciones vacías |
@@ -405,7 +431,8 @@ Las pruebas escriben en un `OUT_DIR` temporal: **nunca** tocan el `out/` del rep
 
 - **Conexión real a SAP** (RFC, OData, IDoc): se diseña, no se implementa (PRD §2.3 y §7.5).
 - **Lectura de binarios** `.xlsx`/`.pdf`: los fixtures llegan normalizados a JSON y texto (PRD §7.1). El
-  `oc_leer_excel` es P1 opcional.
+  `oc_leer_excel` (P1 opcional) queda **declarado y no implementado**: leer `.xlsx` exigiría una dependencia
+  nueva para un requisito opcional, y queda anotado en `src/tools/oc.ts` y en el README §9.
 - **Recepción de mercancía, registro de factura y pago**: fuera del alcance (PRD §2.3). La factura solo se
   mira para detectar el caso retroactivo.
 - **Autenticación, roles y multiusuario**: el link puede ser público (PRD §6.1).
