@@ -1,0 +1,38 @@
+# =============================================================================
+# Reto 03 · Portabilidad de la aplicación
+#
+# Estas reglas viajan CON solucion/: si esta carpeta se reutiliza como base para
+# otro reto, ya llega limpia sin depender del .gitignore de la raíz.
+#
+# Las reglas de TODO el repositorio están en ../.gitignore (raíz del reto).
+# No las dupliques aquí: este archivo solo cubre lo mínimo e imprescindible.
+# =============================================================================
+
+# Dependencias
+node_modules/
+
+# Secretos (PRD §8: la clave vive SOLO en variable de entorno del backend)
+.env
+.env.*
+!.env.example
+
+# Salidas generadas en ejecución (PRD §8 Determinismo)
+# out/sap/ (OC creadas por el simulador), la evidencia de aprobación en txt/pdf,
+# out/control.csv, out/log.jsonl y out/sessions/ son artefactos: se regeneran
+# con `npm run demo` o con la app.
+out/*
+!out/.gitkeep
+*.jsonl
+
+# Build y cachés del front
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Logs y cobertura
+*.log
+coverage/
+
+# Basura del SO, por si solucion/ se copia a un repo sin el .gitignore de la raíz
+.DS_Store

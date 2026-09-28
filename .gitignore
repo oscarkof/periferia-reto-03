@@ -1,0 +1,120 @@
+# =============================================================================
+# Reto 03 · Agente de Órdenes de Compra SAP · Periferia IT Group
+# RAÍZ DEL REPOSITORIO — reglas para todo el árbol del reto.
+#
+# Regla dura del PRD (§8 y §9.5): sin node_modules/, sin out/ y sin .env.
+# Los patrones sin "/" inicial aplican a cualquier profundidad, así que estas
+# reglas cubren también todo lo que hay dentro de solucion/.
+#
+# Reparto de responsabilidad con solucion/.gitignore:
+#   · aquí        → todo el repositorio y la entrega (secretos, dependencias,
+#                   salidas, builds, logs, cobertura, SO, IDE, tooling de
+#                   agentes, modelos locales, artefactos de entrega)
+#   · solucion/   → solo lo que debe VIAJAR con la app para poder reutilizarla
+#                   como base de otro reto sin arrastrar basura
+# Al añadir una regla nueva: si aplica a todo el reto, va aquí; si es necesaria
+# para que solucion/ sea portable por sí sola, va también en el archivo interno.
+#
+# ⚠️ NO se ignoran `*.json`, `*.txt` ni `*.md` de forma global: los fixtures que
+# entrega Periferia son exactamente de esos tipos y son entregable
+# (solicitudes/<caso>/{correo,solicitud,aprobacion}.json, cotizacion.txt,
+# factura.txt y los cuatro maestros en JSON).
+# `*.csv` tampoco se ignora: el único CSV de este reto (`out/control.csv`) es
+# una salida y ya queda cubierto por `out/*`.
+# =============================================================================
+
+# ── Secretos (PRD §8: la clave vive SOLO en variable de entorno) ─────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# ── Dependencias ─────────────────────────────────────────────────────────────
+node_modules/
+.pnp.*
+.yarn/
+jspm_packages/
+
+# ── Salidas generadas en ejecución (PRD §8 Determinismo · §6.1) ──────────────
+# out/ contiene la OC creada por el SAP simulado (out/sap/), la evidencia de
+# aprobación, el log de control, log.jsonl y las sesiones. Se regeneran con
+# `npm run demo` o con la app; solo se versiona el marcador de la carpeta.
+out/*
+!out/.gitkeep
+*.jsonl
+
+# ── Build, cachés y compilados ───────────────────────────────────────────────
+dist/
+build/
+.vite/
+.next/
+.cache/
+*.tsbuildinfo
+.eslintcache
+
+# ── Logs y trazas ────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-error.log*
+logs/
+nohup.out
+
+# ── Cobertura de tests ───────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Basura del sistema operativo ─────────────────────────────────────────────
+# Verificado en el reto 01: sin estas reglas en la RAÍZ, un .DS_Store de la
+# raíz sí se versionaba (el .gitignore de solucion/ no alcanza hacia arriba).
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# ── Editores e IDE ───────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+
+# ── Herramientas locales de agentes (no son parte del entregable) ────────────
+# Quita la línea correspondiente si algún día quieres compartir tus reglas o
+# skills por git en lugar de mantenerlas solo en local.
+.clinerules/
+.cline/
+.claude/
+.agents/
+.opencode/
+.cursor/
+.cursorrules
+.windsurfrules
+
+# ── Salida de la skill archify ───────────────────────────────────────────────
+# La carpeta de trabajo de archify es efímera: el artefacto que se versiona es
+# el que se copia a docs/diagramas/.
+.archify/
+
+# ── Modelos locales de LLM ───────────────────────────────────────────────────
+# Ollama guarda los modelos en ~/.ollama; aquí solo evitamos restos accidentales.
+.ollama/
+*.gguf
+*.safetensors
+*.bin
+
+# ── Artefactos de la entrega (PRD §9.5) ──────────────────────────────────────
+# El zip se genera al empaquetar; no se versiona dentro del propio repo.
+*.zip
+
+# ── Restos de otros lenguajes por herramientas de apoyo ──────────────────────
+__pycache__/
+*.pyc
