@@ -397,7 +397,7 @@ reto-03/                              raíz del repo y del entregable (.zip = es
 | `demo.test.ts` | El recorrido completo de los 6 casos y que repetirlo no crea OC nuevas |
 | `bucle.test.ts` | El ciclo: topes (CA1), confirmación solo con un «sí» (CA3), auditoría (CA2), error del proveedor (CA5) | F3 ✅ |
 | `api.test.ts` | Las rutas del PRD §6.4 con `inject()`: chat JSON y SSE, sesión persistida, errores claros y ninguna respuesta con la clave | F3 ✅ |
-| `front-navegador.test.ts` | `web/app.js` ejecutándose en un DOM mínimo contra el backend real |
+| `front-navegador.test.ts` | `web/app.js` ejecutándose en un DOM mínimo (`test-utils/front.ts`) contra el backend real con `inject()`: arranque, tarjetas de herramienta, banda de confirmación (CA3), descargas de `out/` y fallos | F4 ✅ |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las **mismas piezas** que usa la aplicación (F6) |
 
 Las pruebas escriben en un `OUT_DIR` temporal: **nunca** tocan el `out/` del repositorio ni los fixtures.

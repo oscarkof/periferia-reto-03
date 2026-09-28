@@ -52,16 +52,17 @@ queda **marcada** en el log de control.
 ## 0. Estado del entregable
 
 Este reto se construye por fases; el historial de commits las sigue una a una. Hoy el repositorio está en
-**F3 (agente, LLM y API)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
-estructura del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos
-documentos de diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros,
-**RC1–RC10**, derivados, payload validado con `zod`, evidencia y log de control), **`src/sap/`** (la interfaz
-`SapAdapter` del PRD y el simulador con idempotencia), **`src/tools/` + `demo.ts`** (las cinco herramientas
-`oc_*` con su contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo) y **`src/agent/` +
-`src/llm/` + `src/server.ts`**: el ciclo del agente con sus topes, tres proveedores tras una interfaz
-(`ollama`, `openai`, `mock`), el comportamiento en `agent/prompt.md`, el conocimiento del proceso en
-`src/knowledge/` y la API del chat con SSE. **136 pruebas en verde y `typecheck` sin errores.** Faltan el
-front (F4), el despliegue con `SOLUCION.md` (F5) y el módulo reutilizable (F6).
+**F4 (front de chat)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la estructura
+del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos documentos de
+diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros, **RC1–RC10**,
+derivados, payload validado con `zod`, evidencia y log de control), **`src/sap/`** (la interfaz `SapAdapter`
+del PRD y el simulador con idempotencia), **`src/tools/` + `demo.ts`** (las cinco herramientas `oc_*` con su
+contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo), **`src/agent/` + `src/llm/` +
+`src/server.ts`** (el ciclo del agente con sus topes, tres proveedores tras una interfaz —`ollama`, `openai`,
+`mock`—, el comportamiento en `agent/prompt.md`, el conocimiento del proceso en `src/knowledge/` y la API con
+SSE) y **`web/`** (el chat sin build: historial, tarjetas de herramienta, banda de confirmación y descargas).
+**144 pruebas en verde y `typecheck` sin errores.** Faltan el despliegue con `SOLUCION.md` (F5) y el módulo
+reutilizable (F6).
 
 | Fase | Feature | Rama | Qué entrega | Estado |
 |---|---|---|---|---|
@@ -69,8 +70,7 @@ front (F4), el despliegue con `SOLUCION.md` (F5) y el módulo reutilizable (F6).
 | **F1** | `core` | `f01-core` | `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia, control) + `src/sap/` (interfaz y simulado) con **88 pruebas** | ✅ **hecho** |
 | **F2** | `tools` | `f02-tools` | `src/tools/` (las cinco `oc_*` + contrato y auditoría) y `demo.ts` con el recorrido de los 6 casos | ✅ **hecho** |
 | **F3** | `agente-llm-api` | `f03-agente-llm-api` | `src/agent/` (ciclo, sesión, confirmación, eventos), `src/llm/` (ollama/openai/mock), `src/server/` + API con SSE, `agent/prompt.md` y `src/knowledge/` · **136 pruebas** | ✅ **hecho** |
-| **F4** | `web` | `f04-web` | Front de chat: tool-calls visibles, banda de confirmación y descargas | ⏳ |
-
+| **F4** | `web` | `f04-web` | `web/` (chat sin build: historial, tarjetas de herramienta, banda de confirmación, descargas), `api/files` confinado a `out/` y **8 pruebas que ejecutan el front** · **144 pruebas** | ✅ **hecho** |
 | **F5** | `deploy-solucion` | `f05-deploy` | Docker, `SOLUCION.md` (12 secciones) y publicación del link | ⏳ |
 | **F6** | `modulo` (bonus) | `f06-modulo` | Agente empaquetado reutilizable + test de paridad con la app | ⏳ |
 
@@ -104,9 +104,9 @@ docker compose up --build     # front + API en http://127.0.0.1:3000
 |---|---|---|
 | `npm install` | ✅ funciona (94 paquetes) | — |
 | `npm run typecheck` | ✅ **0 errores**, cero `any` | — |
-| `npm test` | ✅ **136 pruebas**, sin modelo y sin red | F4→F6 (hasta ~150) |
+| `npm test` | ✅ **144 pruebas**, sin modelo y sin red | F5→F6 |
 | `npm run demo` | ✅ **los 6 casos**: 1 creada, 2 bloqueadas, 3 que esperan el «sí»; con `--confirmar` se crean las 3 y `sol-001` sale idempotente | — |
-| `npm run dev` | ✅ **API del chat** en `http://127.0.0.1:3000` (SSE o `?json=1`); con `LLM_PROVIDER=mock` no necesita nada instalado | F4 (el front) |
+| `npm run dev` | ✅ **front de chat + API** en `http://127.0.0.1:3000`; con `LLM_PROVIDER=mock` no necesita nada instalado | — |
 | `docker compose up --build` | — | F5 |
 | Leer la arquitectura ya decidida | ✅ | [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) |
 | Ver el plan por fases y los mensajes de commit | ✅ | [`solucion/docs/repo-setup.md`](solucion/docs/repo-setup.md) §5 |
@@ -260,6 +260,11 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
     ├── src/llm/                      adapter.ts (la interfaz del PRD §6.1) · ollama.ts · openai.ts
     │                                 · mock.ts (guion determinista) · fabrica.ts                 [F3 ✅]
     ├── src/server.ts + src/server/   el arranque y la API: /api/chat (SSE o JSON), health…      [F3 ✅]
+    ├── web/                          el chat sin build: index.html, estilos.css, sse.js (parser
+    │                                 con prueba propia) y app.js (historial, tarjetas de
+    │                                 herramienta, banda de confirmación y descargas)           [F4 ✅]
+    ├── test-utils/                   navegador mínimo (`front.ts`): carga `web/app.js` en un
+    │                                 contexto de `vm` y conecta su `fetch` al backend real       [F4 ✅]
     ├── src/llm/                      adaptadores de proveedor (ollama · openai · mock)             [F3]
     ├── src/server.ts + src/server/   API HTTP, stream SSE y front estático                         [F3]
     ├── web/                          front de chat (HTML, CSS, JS sin build)                       [F4]
@@ -331,13 +336,13 @@ npm run typecheck   # 0 errores, cero any
 | `escritor.test.ts` | El confinamiento a `out/` (un `../` se rechaza), la escritura atómica y `limpiar` conservando el log | ✅ 6 |
 | `bucle.test.ts` | CA1–CA5 con el proveedor `mock`: topes de iteraciones y de tokens, confirmación solo con un «sí» explícito, auditoría anti-alucinación y error del proveedor sin matar la sesión | ✅ 11 |
 | `api.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos): chat en JSON y en SSE, sesiones recuperables, errores claros y ninguna respuesta con claves ni rutas del servidor | ✅ 7 |
-| `front-navegador.test.ts` | `app.js` ejecutándose en un DOM mínimo contra el backend real | F4 |
+| `front-navegador.test.ts` | `web/app.js` **ejecutándose** en un DOM mínimo contra el backend real: arranque, cinco tarjetas de herramienta, la banda de confirmación y el «sí» del botón (CA3), las descargas de `out/` y el fallo del backend en pantalla; el stream SSE llega troceado a propósito | ✅ 8 |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las mismas piezas que usa la aplicación | F6 |
 
-Estado: **136 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
-de arriba suma 136 (118 de F1 y F2 + 11 del ciclo + 7 de la API). Las pruebas escriben siempre en un `OUT_DIR`
-temporal, así que **nunca** tocan el `out/` del repositorio ni los fixtures. El plan completo, suite por
-suite, está en [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
+Estado: **144 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
+de arriba suma 144 (118 de F1 y F2 + 11 del ciclo + 7 de la API + 8 del front). Las pruebas escriben siempre
+en un `OUT_DIR` temporal, así que **nunca** tocan el `out/` del repositorio ni los fixtures. El plan
+completo, suite por suite, está en [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
 
 ---
 
