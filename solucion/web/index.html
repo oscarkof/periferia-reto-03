@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agente de órdenes de compra SAP · Periferia IT Group</title>
+    <meta
+      name="description"
+      content="Chat del agente que prepara y crea órdenes de compra en un SAP simulado: valida el paquete contra los maestros (RC1-RC10), pide confirmación cuando hace falta (CA3) y deja la evidencia."
+    />
+    <link rel="stylesheet" href="./estilos.css?v=1" />
+  </head>
+
+  <body>
+    <header class="cabecera">
+      <div class="cabecera__marca">
+        <h1>Órdenes de compra SAP</h1>
+        <p class="cabecera__sub">
+          El agente lee el paquete, valida contra los maestros y crea lo que cumple control.
+          <strong>Lo que no cumple no se crea: se explica.</strong>
+        </p>
+      </div>
+      <div class="cabecera__estado">
+        <span id="estado-servidor" class="insignia insignia--neutra" role="status">Conectando…</span>
+        <button id="boton-nueva-sesion" class="boton boton--fantasma" type="button">Nueva sesión</button>
+      </div>
+    </header>
+
+    <main class="pantalla">
+      <section class="chat" aria-label="Conversación con el agente">
+        <ol id="conversacion" class="conversacion" aria-live="polite"></ol>
+
+        <p id="pensando" class="pensando" hidden>
+          <span class="pensando__punto"></span>
+          <span id="pensando-texto">El agente está trabajando…</span>
+        </p>
+
+        <div id="confirmacion" class="confirmacion" role="alert" hidden>
+          <div class="confirmacion__texto">
+            <strong>El agente necesita tu confirmación</strong>
+            <span id="confirmacion-detalle">
+              Hay excepciones por firmar: confírmalas antes de crear la orden de compra.
+            </span>
+          </div>
+          <div class="confirmacion__acciones">
+            <button id="boton-confirmar" class="boton boton--principal" type="button">Sí, confirmo</button>
+            <button id="boton-rechazar" class="boton boton--fantasma" type="button">No, espera</button>
+          </div>
+        </div>
+
+        <div id="sugerencias" class="sugerencias" aria-label="Ejemplos de mensaje"></div>
+
+        <form id="formulario" class="entrada">
+          <label class="visualmente-oculto" for="entrada">Mensaje para el agente</label>
+          <textarea
+            id="entrada"
+            class="entrada__campo"
+            name="mensaje"
+            rows="2"
+            placeholder="Procesa sol-004 y dime si se puede crear la orden de compra."
+            autocomplete="off"
+          ></textarea>
+          <button id="boton-enviar" class="boton boton--principal" type="submit">Enviar</button>
+        </form>
+        <p class="entrada__ayuda">
+          Enter envía · Mayús+Enter salta de línea · “Nueva sesión” empieza de cero · interfaz v1
+        </p>
+      </section>
+
+      <aside class="lateral" aria-label="Contexto de la sesión">
+        <h2 class="lateral__titulo">Sesión</h2>
+        <dl class="datos">
+          <dt>Identificador</dt>
+          <dd id="dato-sesion">—</dd>
+          <dt>Turnos</dt>
+          <dd id="dato-turnos">0</dd>
+          <dt>Confirma</dt>
+          <dd id="dato-usuario">—</dd>
+        </dl>
+
+        <h2 class="lateral__titulo">Archivos generados</h2>
+        <ul id="archivos" class="archivos">
+          <li class="archivos__vacio">Aún no hay archivos: procesa un caso.</li>
+        </ul>
+
+        <h2 class="lateral__titulo">Casos del fixture</h2>
+        <ul id="casos" class="casos">
+          <li class="archivos__vacio">Consultando…</li>
+        </ul>
+      </aside>
+    </main>
+
+    <div id="aviso" class="aviso" role="status" hidden></div>
+
+    <script type="module" src="./app.js?v=1"></script>
+  </body>
+</html>
