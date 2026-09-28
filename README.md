@@ -388,34 +388,23 @@ opcionales) y ninguna se registra ni se devuelve por la API.
 
 ## 8. Link de prueba
 
-> **Estado: el despliegue está hecho y verificado; la URL pública todavía no existe.** `docker compose up
-> --build` construye la imagen y el contenedor queda **`Up (healthy)`** en menos de 15 segundos (§1), con
-> `/api/health` respondiendo, el front servido y las 156 pruebas corriendo dentro de la imagen. Lo que falta es
-> publicarlo, y eso es un paso de tres minutos que necesita una cuenta de despliegue (por eso no lo hago yo).
-> Mientras tanto, la prueba es local —que es la modalidad que el PRD §9.3 admite con **−10** asumido—: un
-> comando de §1 y `http://127.0.0.1:3000`.
+> **Decisión: se despliega en local durante la defensa.** El PRD §9.3 admite esa modalidad y asume el **−10**;
+> a cambio, la demo corre sobre la máquina, que es lo único que conserva el **modelo local** sin publicar
+> ninguna clave. El despliegue está hecho y verificado: `docker compose up --build` construye la imagen y el
+> contenedor queda **`Up (healthy)`** en menos de 15 segundos (§1), con `/api/health` respondiendo, el front
+> servido y las 156 pruebas corriendo dentro de la imagen.
 
-**Cómo se prueba hoy:** `docker compose up --build` y el chat en `http://127.0.0.1:3000`. Con
+**Cómo se prueba:** `cd reto-03 && docker compose up --build` y el chat en `http://127.0.0.1:3000`. Con
 `LLM_PROVIDER=mock` el turno responde en milisegundos (ideal para enseñar la pantalla); con Ollama real el
 turno de un caso tarda más de un minuto, y el front va mostrando cada herramienta mientras ocurre.
 
-| Vía, si decides publicarlo | Cómo | A favor | En contra |
-|---|---|---|---|
-| **Túnel a esta máquina** (Cloudflare Tunnel o ngrok) | `docker compose up -d` y el túnel apuntando a `http://127.0.0.1:3000` | Es lo único que deja el **modelo local** funcionando por el link: el agente llama a Ollama en la máquina, no en el contenedor | El link vive mientras la máquina esté encendida y la URL gratuita cambia al reiniciar el túnel |
-| **Render / Railway / Fly.io** | Desplegar la imagen del `Dockerfile` | Link permanente, sin depender del portátil | Sin GPU no hay modelo local: hay que poner `LLM_PROVIDER=openai` + clave, o enseñar el `mock` |
-| **Azure** (Container Apps o App Service) | Igual, con la imagen en un *registry* | Es la nube que un cliente corporativo ya tiene contratada | Es la vía más lenta de montar para una demo de cinco minutos |
+**Vías, si algún día se decide publicar** (ninguna está activa):
 
-**Cómo se activaría el túnel** (la vía que conserva el modelo real):
-
-```bash
-brew install cloudflared                      # no está instalado en esta máquina
-cd reto-03 && docker compose up -d            # el agente, en http://127.0.0.1:3000
-cloudflared tunnel --url http://127.0.0.1:3000
-# imprime una URL https://…trycloudflare.com — esa sería la del entregable
-```
-
-Para que el link fuera **estable** (misma URL siempre) haría falta un túnel con nombre y un dominio en
-Cloudflare; con la cuenta gratuita se puede, y el comando queda `cloudflared tunnel run reto-03`.
+| Vía | Cómo | Qué se gana |
+|---|---|---|
+| **Túnel a esta máquina** (Cloudflare Tunnel o ngrok) | `docker compose up -d` y el túnel apuntando a `http://127.0.0.1:3000` | Es lo único que conserva el **modelo local** detrás del link |
+| **Render / Railway / Fly.io** | Desplegar la imagen del `Dockerfile` | URL permanente; a cambio hay que usar `LLM_PROVIDER=openai` con clave o enseñar el `mock` |
+| **Azure** (Container Apps o App Service) | Igual, con la imagen en un *registry* | Es la nube que un cliente corporativo ya tiene contratada |
 
 **Clave de acceso:** no aplica. El backend no expone ninguna clave de modelo (`/api/health` solo dice el
 proveedor y el modelo), así que un link público no filtraría credenciales.

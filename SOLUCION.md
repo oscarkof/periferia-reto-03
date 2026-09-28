@@ -530,3 +530,8 @@ esconderse.
 revisó. Por eso CA3 se resolvió en el código y no en el prompt, y por eso hay una prueba que exige el «sí»
 explícito. En un proceso que crea documentos contables, la diferencia entre «casi siempre acierta» y «no
 puede pasar» es toda la diferencia.
+
+**Cómo se prueba esta entrega.** El despliegue es **local durante la defensa**: `docker compose up --build` y
+el chat en `http://127.0.0.1:3000`, con el **−10** del PRD §9.3 asumido por decisión. El contenedor está
+verificado (*`Up (healthy)`*, con las 156 pruebas corriendo dentro de la imagen) y las vías para publicarlo,
+si algún día se decide, quedan en el README §8 con sus comandos.
