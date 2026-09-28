@@ -40,6 +40,7 @@ queda **marcada** en el log de control.
 | Saber el stack y por qué cada pieza | [2. Stack](#2-stack-con-qué-está-hecho-y-por-qué) |
 | Entender la elección del modelo, con números | [3. El modelo](#3-el-modelo-elección-mediciones-y-costo) |
 | Saber qué hace cada archivo | [4. Estructura](#4-estructura-del-repositorio-archivo-por-archivo) |
+| Ver la arquitectura en un diagrama navegable | [`solucion/docs/diagramas/arquitectura-reto03.html`](solucion/docs/diagramas/arquitectura-reto03.html) |
 | Ver las herramientas sin modelo | [5. `demo.ts`](#5-demots-las-herramientas-sin-modelo) |
 | Correr las pruebas | [6. Pruebas](#6-pruebas-automáticas) |
 | Configurar el entorno | [7. Variables de entorno](#7-variables-de-entorno) |
@@ -231,7 +232,10 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
 └── solucion/                         la aplicación
     ├── .env.example                  las 22 variables documentadas, sin valores                 [F0 ✅]
     ├── .gitignore                    lo mínimo para reutilizar esta carpeta como base           [F0 ✅]
-    ├── docs/                         arquitectura.md y repo-setup.md                            [F0 ✅]
+    ├── docs/                         arquitectura.md, repo-setup.md y el diagrama navegable        [F0 ✅]
+    │                                 diagramas/arquitectura-reto03.html: front → API → agente →
+    │                                 herramientas → motor → SAP simulado, con cada nodo enlazado
+    │                                 a la línea que lo sostiene
     ├── package.json                  dependencias, scripts y engines                            [F1 ✅]
     ├── package-lock.json             versiones exactas (sí se versiona)                         [F1 ✅]
     ├── tsconfig.json                 TypeScript estricto, sin emitir                            [F1 ✅]

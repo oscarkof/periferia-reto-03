@@ -78,6 +78,31 @@ Dos consecuencias del diseño que sostienen todo lo demás:
 *conocimiento* en `src/knowledge/`, *ejecución* en `src/tools/`. Cambiar una regla de negocio no toca el
 servidor; cambiar el trato del agente no recompila nada.
 
+### 1.1 Diagrama navegable
+
+[`diagramas/arquitectura-reto03.html`](diagramas/arquitectura-reto03.html) es este mismo recorrido como HTML
+autocontenido: analista → front → API → agente → herramientas → motor determinista → SAP simulado, con el
+paquete del caso, los maestros, las reglas del entorno y `out/` como almacenes. Se abre con doble clic (sin
+servidor ni dependencias), trae tema claro/oscuro y **cada nodo enlaza a la línea exacta que lo sostiene**
+—código o documento— en la revisión `61d0eed` del repositorio: así el diagrama no puede quedarse descolgado
+del código sin que se note (por ejemplo `oc_crear` apunta a `src/sap/mock.ts:101` y el motor a
+`src/core/controles.ts:309`).
+
+Se generó con la skill **archify** sobre este repositorio y pasó sus cuatro gates automáticos (`validate`,
+`deliver`, `check` y `browser-check`, este último en un navegador real; los comprobantes quedan en
+`.archify/`, que no se versiona):
+
+```bash
+cd reto-03
+node ~/.claude/skills/archify/bin/archify.mjs finalize architecture \
+  .archify/architecture-reto03-<fecha>/candidate.json \
+  solucion/docs/diagramas/arquitectura-reto03.html --repo-root . --quality showcase
+```
+
+La herramienta deja un aviso **opcional** de forma: tres conexiones usan un codo más del sugerido
+(`herramientas→motor`, `sap→out` y la vuelta de confirmación `agente→analista`). Es disposición, no
+contenido, y se documenta en vez de esconderlo.
+
 ---
 
 ## 2. Capas: qué hace cada una y por qué está separada
