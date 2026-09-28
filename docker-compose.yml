@@ -1,0 +1,74 @@
+# Un solo comando levanta el agente completo (PRD §8 · Arranque):
+#
+#     cd reto-03
+#     docker compose up --build
+#
+# Queda en http://127.0.0.1:3000 (front de chat + API). Con Ollama corriendo en
+# el host y el modelo descargado, el agente responde de verdad; sin Ollama,
+# `LLM_PROVIDER=mock` permite recorrer la app entera con el guion de la demo
+# (instantáneo y sin descargar nada).
+#
+# Variables: se leen del entorno y, si existe, de `reto-03/.env`
+# (`cp solucion/.env.example .env`). `.env` está ignorado por git.
+
+services:
+  agente:
+    build:
+      # El contexto es la raíz del reto: la imagen necesita `solucion/` y
+      # `fixtures/` (ver solucion/Dockerfile).
+      context: .
+      dockerfile: solucion/Dockerfile
+    image: reto-03-agente-ordenes-compra
+    ports:
+      # Puerto del host : puerto del contenedor.
+      - "${PORT:-3000}:3000"
+    environment:
+      # Dentro del contenedor, 127.0.0.1 no es alcanzable desde fuera.
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # Proveedor: ollama (local, por defecto) · openai · mock.
+      LLM_PROVIDER: "${LLM_PROVIDER:-ollama}"
+
+      # Ollama corre en el host, no en el contenedor: así el modelo se comparte
+      # con el resto del sistema y no hay que descargar 5,3 GB dentro de Docker.
+      OLLAMA_HOST: "${OLLAMA_HOST:-http://host.docker.internal:11434}"
+      OLLAMA_MODEL: "${OLLAMA_MODEL:-granite4.1:8b}"
+      # El prompt, el conocimiento del proceso y los esquemas de las cinco
+      # herramientas pasan de 4 000 tokens; por debajo de 8192 Ollama rechaza la
+      # petición («request exceeds the available context size»).
+      OLLAMA_NUM_CTX: "${OLLAMA_NUM_CTX:-8192}"
+
+      # Solo si LLM_PROVIDER=openai. La clave NO se versiona: llega por entorno
+      # o desde `reto-03/.env` (PRD §8 · Seguridad).
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_BASE_URL: "${OPENAI_BASE_URL:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-}"
+
+      # Quién confirma en el chat (CA3). Es el correo que firma las excepciones
+      # del payload: sale de aquí y de la sesión, nunca del modelo.
+      USUARIO_ANALISTA: "${USUARIO_ANALISTA:-compras@periferia-ficticia.com}"
+
+      # Fecha de referencia: fija = reproducible. RC8 (retroactivas) y RC9
+      # (aprobación anterior a la solicitud) dependen de ella.
+      FECHA_EJECUCION: "${FECHA_EJECUCION:-2026-09-03}"
+
+      # SAP simulado sobre `out/sap/`. El adaptador real es diseño, no
+      # implementación, y vive en SOLUCION.md §6.
+      SAP_MODO: "${SAP_MODO:-simulado}"
+      SAP_SOCIEDAD: "${SAP_SOCIEDAD:-1000}"
+      SAP_ORG_COMPRAS: "${SAP_ORG_COMPRAS:-1000}"
+
+      # Topes de gasto y robustez (PRD §8).
+      MAX_ITERACIONES: "${MAX_ITERACIONES:-25}"
+      MAX_TOKENS_SESION: "${MAX_TOKENS_SESION:-200000}"
+      LLM_TIMEOUT_MS: "${LLM_TIMEOUT_MS:-180000}"
+    extra_hosts:
+      # En Linux `host.docker.internal` no existe por defecto; en macOS y Windows
+      # ya está resuelto y esta línea no molesta.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Lo generado queda visible desde el host (`solucion/out/`), que es donde
+      # el evaluador abre la OC creada, la evidencia y `control.csv`.
+      - ./solucion/out:/app/out
+    restart: unless-stopped

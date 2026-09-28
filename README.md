@@ -52,7 +52,7 @@ queda **marcada** en el log de control.
 ## 0. Estado del entregable
 
 Este reto se construye por fases; el historial de commits las sigue una a una. Hoy el repositorio está en
-**F4 (front de chat)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la estructura
+**F5 (despliegue y documento de solución)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la estructura
 del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos documentos de
 diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros, **RC1–RC10**,
 derivados, payload validado con `zod`, evidencia y log de control), **`src/sap/`** (la interfaz `SapAdapter`
@@ -61,8 +61,9 @@ contrato `{ ok, data | error }` y el recorrido de los 6 casos sin modelo), **`sr
 `src/server.ts`** (el ciclo del agente con sus topes, tres proveedores tras una interfaz —`ollama`, `openai`,
 `mock`—, el comportamiento en `agent/prompt.md`, el conocimiento del proceso en `src/knowledge/` y la API con
 SSE) y **`web/`** (el chat sin build: historial, tarjetas de herramienta, banda de confirmación y descargas).
-**144 pruebas en verde y `typecheck` sin errores.** Faltan el despliegue con `SOLUCION.md` (F5) y el módulo
-reutilizable (F6).
+**156 pruebas en verde y `typecheck` sin errores.** Y encima, el despliegue: **`docker compose up --build`**
+levanta el agente entero y el contenedor queda *healthy*, con **`SOLUCION.md`** en la raíz y sus 12 secciones
+del PRD §9.1. Solo falta el módulo reutilizable (F6).
 
 | Fase | Feature | Rama | Qué entrega | Estado |
 |---|---|---|---|---|
@@ -71,7 +72,7 @@ reutilizable (F6).
 | **F2** | `tools` | `f02-tools` | `src/tools/` (las cinco `oc_*` + contrato y auditoría) y `demo.ts` con el recorrido de los 6 casos | ✅ **hecho** |
 | **F3** | `agente-llm-api` | `f03-agente-llm-api` | `src/agent/` (ciclo, sesión, confirmación, eventos), `src/llm/` (ollama/openai/mock), `src/server/` + API con SSE, `agent/prompt.md` y `src/knowledge/` · **136 pruebas** | ✅ **hecho** |
 | **F4** | `web` | `f04-web` | `web/` (chat sin build: historial, tarjetas de herramienta, banda de confirmación, descargas), `api/files` confinado a `out/` y **8 pruebas que ejecutan el front** · **144 pruebas** | ✅ **hecho** |
-| **F5** | `deploy-solucion` | `f05-deploy` | Docker, `SOLUCION.md` (12 secciones) y publicación del link | ⏳ |
+| **F5** | `deploy-solucion` | `f05-deploy` | `solucion/Dockerfile`, `docker-compose.yml`, `.dockerignore`, `SOLUCION.md` (12 secciones) y **12 pruebas** que vigilan las promesas del despliegue · **156 pruebas** | ✅ **hecho** |
 | **F6** | `modulo` (bonus) | `f06-modulo` | Agente empaquetado reutilizable + test de paridad con la app | ⏳ |
 
 Cada fase es **una feature con nombre propio**, y ese nombre es el mismo de la rama y del mensaje de
@@ -104,10 +105,10 @@ docker compose up --build     # front + API en http://127.0.0.1:3000
 |---|---|---|
 | `npm install` | ✅ funciona (94 paquetes) | — |
 | `npm run typecheck` | ✅ **0 errores**, cero `any` | — |
-| `npm test` | ✅ **144 pruebas**, sin modelo y sin red | F5→F6 |
+| `npm test` | ✅ **155 pruebas**, sin modelo y sin red | F6 |
 | `npm run demo` | ✅ **los 6 casos**: 1 creada, 2 bloqueadas, 3 que esperan el «sí»; con `--confirmar` se crean las 3 y `sol-001` sale idempotente | — |
 | `npm run dev` | ✅ **front de chat + API** en `http://127.0.0.1:3000`; con `LLM_PROVIDER=mock` no necesita nada instalado | — |
-| `docker compose up --build` | — | F5 |
+| `docker compose up --build` | ✅ **un comando y queda *healthy***: build, arranque y `Up (healthy)` en menos de 15 s; dentro del contenedor también corren las pruebas | — |
 | Leer la arquitectura ya decidida | ✅ | [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) |
 | Ver el plan por fases y los mensajes de commit | ✅ | [`solucion/docs/repo-setup.md`](solucion/docs/repo-setup.md) §5 |
 
@@ -233,10 +234,15 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
 ├── .gitignore                        reglas de todo el árbol                                    [F0 ✅]
 ├── fixtures/reto-03/                 6 casos (correo, solicitud, cotización, aprobación y la
 │                                     factura del retroactivo) + 4 maestros
+├── docker-compose.yml                un comando levanta el front y la API                        [F5 ✅]
+├── .dockerignore                     lo que no viaja en la imagen: node_modules, out y .env      [F5 ✅]
+├── SOLUCION.md                       las 12 secciones del PRD §9.1, contra el código            [F5 ✅]
 └── solucion/                         la aplicación
     ├── .env.example                  las 23 variables documentadas, sin valores                 [F0 ✅]
     ├── .gitignore                    lo mínimo para reutilizar esta carpeta como base           [F0 ✅]
     ├── docs/                         arquitectura.md, repo-setup.md y el diagrama navegable        [F0 ✅]
+    ├── Dockerfile                    la imagen: Node 24, `HOST=0.0.0.0`, usuario sin privilegios
+    │                                 y healthcheck contra `/api/health`                            [F5 ✅]
     │                                 diagramas/arquitectura-reto03.html: front → API → agente →
     │                                 herramientas → motor → SAP simulado, con cada nodo enlazado
     │                                 a la línea que lo sostiene
@@ -337,10 +343,11 @@ npm run typecheck   # 0 errores, cero any
 | `bucle.test.ts` | CA1–CA5 con el proveedor `mock`: topes de iteraciones y de tokens, confirmación solo con un «sí» explícito, auditoría anti-alucinación y error del proveedor sin matar la sesión | ✅ 11 |
 | `api.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos): chat en JSON y en SSE, sesiones recuperables, errores claros y ninguna respuesta con claves ni rutas del servidor | ✅ 7 |
 | `front-navegador.test.ts` | `web/app.js` **ejecutándose** en un DOM mínimo contra el backend real: arranque, cinco tarjetas de herramienta, la banda de confirmación y el «sí» del botón (CA3), las descargas de `out/` y el fallo del backend en pantalla; el stream SSE llega troceado a propósito | ✅ 8 |
+| `despliegue.test.ts` | Las promesas del despliegue, comprobadas **sin Docker**: la imagen escucha en `0.0.0.0`, no corre como root, se vigila contra `/api/health` y no copia `.env`; el compose publica el puerto y monta `out/`; `SOLUCION.md` tiene las 12 secciones del PRD §9.1, en orden y sin ninguna vacía | ✅ 12 |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las mismas piezas que usa la aplicación | F6 |
 
-Estado: **144 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
-de arriba suma 144 (118 de F1 y F2 + 11 del ciclo + 7 de la API + 8 del front). Las pruebas escriben siempre
+Estado: **156 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
+de arriba suma 156 (118 de F1 y F2 + 11 del ciclo + 7 de la API + 8 del front). Las pruebas escriben siempre
 en un `OUT_DIR` temporal, así que **nunca** tocan el `out/` del repositorio ni los fixtures. El plan
 completo, suite por suite, está en [`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
 
@@ -381,10 +388,34 @@ opcionales) y ninguna se registra ni se devuelve por la API.
 
 ## 8. Link de prueba
 
-> **Pendiente de publicar: llega en F5.** El PRD §9.3 pide una URL pública activa durante la defensa y
-> admite, si el despliegue no fuera posible, correrlo en local con una penalización de −10. En F5 se
-> documentarán las vías (túnel a la máquina —lo único que conserva el modelo local—, Render/Railway/Fly.io
-> o Azure) con sus comandos, igual que se hizo en el reto 02.
+> **Estado: el despliegue está hecho y verificado; la URL pública todavía no existe.** `docker compose up
+> --build` construye la imagen y el contenedor queda **`Up (healthy)`** en menos de 15 segundos (§1), con
+> `/api/health` respondiendo, el front servido y las 156 pruebas corriendo dentro de la imagen. Lo que falta es
+> publicarlo, y eso es un paso de tres minutos que necesita una cuenta de despliegue (por eso no lo hago yo).
+> Mientras tanto, la prueba es local —que es la modalidad que el PRD §9.3 admite con **−10** asumido—: un
+> comando de §1 y `http://127.0.0.1:3000`.
+
+**Cómo se prueba hoy:** `docker compose up --build` y el chat en `http://127.0.0.1:3000`. Con
+`LLM_PROVIDER=mock` el turno responde en milisegundos (ideal para enseñar la pantalla); con Ollama real el
+turno de un caso tarda más de un minuto, y el front va mostrando cada herramienta mientras ocurre.
+
+| Vía, si decides publicarlo | Cómo | A favor | En contra |
+|---|---|---|---|
+| **Túnel a esta máquina** (Cloudflare Tunnel o ngrok) | `docker compose up -d` y el túnel apuntando a `http://127.0.0.1:3000` | Es lo único que deja el **modelo local** funcionando por el link: el agente llama a Ollama en la máquina, no en el contenedor | El link vive mientras la máquina esté encendida y la URL gratuita cambia al reiniciar el túnel |
+| **Render / Railway / Fly.io** | Desplegar la imagen del `Dockerfile` | Link permanente, sin depender del portátil | Sin GPU no hay modelo local: hay que poner `LLM_PROVIDER=openai` + clave, o enseñar el `mock` |
+| **Azure** (Container Apps o App Service) | Igual, con la imagen en un *registry* | Es la nube que un cliente corporativo ya tiene contratada | Es la vía más lenta de montar para una demo de cinco minutos |
+
+**Cómo se activaría el túnel** (la vía que conserva el modelo real):
+
+```bash
+brew install cloudflared                      # no está instalado en esta máquina
+cd reto-03 && docker compose up -d            # el agente, en http://127.0.0.1:3000
+cloudflared tunnel --url http://127.0.0.1:3000
+# imprime una URL https://…trycloudflare.com — esa sería la del entregable
+```
+
+Para que el link fuera **estable** (misma URL siempre) haría falta un túnel con nombre y un dominio en
+Cloudflare; con la cuenta gratuita se puede, y el comando queda `cloudflared tunnel run reto-03`.
 
 **Clave de acceso:** no aplica. El backend no expone ninguna clave de modelo (`/api/health` solo dice el
 proveedor y el modelo), así que un link público no filtraría credenciales.
@@ -393,7 +424,9 @@ proveedor y el modelo), así que un link público no filtraría credenciales.
 
 ## 9. Qué queda fuera (limitaciones declaradas)
 
-1. **El link público llega en F5** (§8). El PRD §9.3 admite probarlo en local durante la defensa, con −10.
+1. **El link público no está publicado** (§8). El despliegue sí está hecho y verificado —`docker compose up
+   --build` y contenedor *healthy*—, y el PRD §9.3 acepta probarlo en local durante la defensa con −10. Las
+   tres vías para publicarlo, con sus comandos, están en §8.
 2. **Sin conexión real a SAP**: el adaptador es una interfaz y el simulador escribe ficheros en `out/`. El
    diseño de la integración real (OData, BAPI, Integration Suite o carga por archivo) es documentación
    obligatoria y vive en `SOLUCION.md` §6.

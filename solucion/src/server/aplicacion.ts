@@ -80,7 +80,7 @@ export async function crearAplicacion(opciones: OpcionesApp): Promise<Resultado<
   // claves, sin rutas del servidor y sin nada del contenido de las conversaciones.
   app.get("/api/health", async () => ({
     ok: true,
-    fase: "F4",
+    fase: "F5",
     proveedor: proveedor.proveedor,
     modelo: proveedor.modelo,
     usuario: opciones.usuario,
