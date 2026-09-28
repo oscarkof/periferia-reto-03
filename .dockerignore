@@ -1,0 +1,31 @@
+# El contexto de build es esta carpeta (`reto-03/`, ver docker-compose.yml), así
+# que aquí se deja fuera todo lo que no debe viajar en la imagen: dependencias
+# del host, salidas generadas, secretos y basura del sistema.
+#
+# `solucion/out` se excluye a propósito: la imagen crea su propio `out/` (el
+# compose lo monta sobre el del host) y no tiene sentido arrastrar la OC, la
+# evidencia o el `control.csv` de una corrida anterior.
+#
+# `fixtures/` SÍ entra: es lo que entregó Periferia y la app los lee en su sitio
+# (`../fixtures/reto-03`), en modo solo lectura (PRD §7.1).
+
+**/node_modules
+**/out
+**/out/**
+
+# Secretos: `.env` nunca entra. `.env.example` sí, porque es documentación.
+**/.env
+**/.env.*
+!**/.env.example
+
+# La carpeta de trabajo de archify y los comprobantes de sus puertas son
+# artefactos locales; el diagrama que se versiona es el HTML de docs/.
+**/.archify
+**/*.delivery.json
+**/*.delivery-pending.json
+
+.git
+.gitignore
+**/.DS_Store
+**/*.log
+*.zip
