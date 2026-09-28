@@ -51,17 +51,19 @@ queda **marcada** en el log de control.
 ## 0. Estado del entregable
 
 Este reto se construye por fases; el historial de commits las sigue una a una. Hoy el repositorio está en
-**F0 (setup)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la estructura del
-repositorio, los dos `.gitignore` verificados, el `.env.example` con las variables documentadas, el README
-y los dos documentos de diseño (`arquitectura.md` y `repo-setup.md`). **Todavía no hay código**: el motor
-determinista llega en F1 y las herramientas con `demo.ts` en F2. Los comandos de §1 se marcan según lo que
-ya funciona.
+**F1 (motor determinista)**: están el `PRD.md` y los **29 fixtures** tal como los entregó Periferia, la
+estructura del repositorio, los dos `.gitignore` verificados, el `.env.example`, el README y los dos
+documentos de diseño —y, encima, **`src/core/`** (12 módulos deterministas: lectura del paquete, maestros,
+**RC1–RC10**, derivados, payload validado con `zod`, evidencia y log de control) y **`src/sap/`** (la
+interfaz `SapAdapter` del PRD y el simulador con idempotencia). **88 pruebas en verde y `typecheck` sin
+errores.** Faltan las herramientas con `demo.ts` (F2), el agente con la API (F3), el front (F4), el
+despliegue con `SOLUCION.md` (F5) y el módulo reutilizable (F6).
 
 | Fase | Feature | Rama | Qué entrega | Estado |
 |---|---|---|---|---|
 | **F0** | `setup` | `main` | Repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, arquitectura y README | ✅ **hecho** |
-| **F1** | `core` | `f01-core` | `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia) + `src/sap/` (interfaz y simulado) | ⏳ siguiente |
-| **F2** | `tools` | `f02-tools` | Las seis herramientas `oc_*` con `zod` + `demo.ts` (los 6 casos sin modelo) | ⏳ |
+| **F1** | `core` | `f01-core` | `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia, control) + `src/sap/` (interfaz y simulado) con **88 pruebas** | ✅ **hecho** |
+| **F2** | `tools` | `f02-tools` | Las seis herramientas `oc_*` con `zod` + `demo.ts` (los 6 casos sin modelo) | ⏳ siguiente |
 | **F3** | `agente-llm-api` | `f03-agente-llm-api` | Ciclo del agente, adaptadores de proveedor (ollama/openai/mock), API HTTP con SSE y system prompt | ⏳ |
 | **F4** | `web` | `f04-web` | Front de chat: tool-calls visibles, banda de confirmación y descargas | ⏳ |
 | **F5** | `deploy-solucion` | `f05-deploy` | Docker, `SOLUCION.md` (12 secciones) y publicación del link | ⏳ |
@@ -95,9 +97,9 @@ docker compose up --build     # front + API en http://127.0.0.1:3000
 
 | Comando | Hoy | Llega en |
 |---|---|---|
-| `npm install` | — | F1 |
-| `npm run typecheck` | — | F1 (0 errores, cero `any`) |
-| `npm test` | — | F1 (suite de `core`) → F6 |
+| `npm install` | ✅ funciona (94 paquetes) | — |
+| `npm run typecheck` | ✅ **0 errores**, cero `any` | — |
+| `npm test` | ✅ **88 pruebas**, sin modelo y sin red | F2→F6 (hasta ~120) |
 | `npm run demo` | — | F2 (**`6/6`** casos con su desenlace, `sol-001` dos veces sin duplicar) |
 | `npm run dev` | — | F3 (`LLM_PROVIDER=mock` no necesita nada instalado) |
 | `docker compose up --build` | — | F5 |
@@ -230,23 +232,23 @@ reto-03/                              ← raíz del repo y del entregable (.zip 
     ├── .env.example                  las 22 variables documentadas, sin valores                 [F0 ✅]
     ├── .gitignore                    lo mínimo para reutilizar esta carpeta como base           [F0 ✅]
     ├── docs/                         arquitectura.md y repo-setup.md                            [F0 ✅]
-    ├── package.json                  dependencias, scripts y engines                              [F1]
-    ├── package-lock.json             versiones exactas (sí se versiona)                           [F1]
-    ├── tsconfig.json                 TypeScript estricto, sin emitir                              [F1]
+    ├── package.json                  dependencias, scripts y engines                            [F1 ✅]
+    ├── package-lock.json             versiones exactas (sí se versiona)                         [F1 ✅]
+    ├── tsconfig.json                 TypeScript estricto, sin emitir                            [F1 ✅]
     ├── demo.ts                       los 6 casos sin modelo (PRD §6.6)                            [F2]
     ├── agent/prompt.md               comportamiento del agente (system prompt)                    [F3]
     ├── src/knowledge/                conocimiento del proceso que el agente consulta              [F3]
     ├── src/core/                     12 módulos deterministas: paquete, maestros, RC1–RC10,
-    │                                 derivados, payload, evidencia, control…                       [F1]
-    ├── src/sap/                      interfaz SapAdapter (PRD §7.4) + simulado sobre out/sap/      [F1]
+    │                                 derivados, payload, evidencia, control…                     [F1 ✅]
+    ├── src/sap/                      interfaz SapAdapter (PRD §7.4) + simulado sobre out/sap/    [F1 ✅]
     ├── src/tools/                    las seis herramientas `oc_*`                                 [F2]
     ├── src/demo/                     la lógica del recorrido sin modelo                            [F2]
     ├── src/agent/                    ciclo, sesiones y confirmación humana                         [F3]
     ├── src/llm/                      adaptadores de proveedor (ollama · openai · mock)             [F3]
     ├── src/server.ts + src/server/   API HTTP, stream SSE y front estático                         [F3]
     ├── web/                          front de chat (HTML, CSS, JS sin build)                       [F4]
-    ├── test/                         pruebas automáticas                                           [F1–F6]
-    ├── test-utils/                   utilidades y dobles de prueba (no son pruebas)                 [F1]
+    ├── test/                         pruebas automáticas: **88 en verde**                        [F1 ✅]
+    ├── test-utils/                   utilidades y dobles de prueba (no son pruebas)               [F1 ✅]
     └── out/                          salida generada (solo su .gitkeep se versiona)
 ```
 
@@ -271,7 +273,7 @@ Lo que imprime, caso por caso (PRD §6.6):
 | `sol-003` | **bloqueos RC2 y RC3** (aprobador sin autoridad en ese centro y monto sobre el tope) · sin OC |
 | `sol-004` | **confirmación RC5**: 25.000.000 frente a 26.500.000; con `--confirmar`, OC creada |
 | `sol-005` | **confirmación RC8**: `retroactiva = true`; con confirmación, OC creada y **marcada** en `control.csv` |
-| `sol-006` | **RC6** derivado del proveedor (C1) + confirmación · **RC7** informado (Z000) · OC tras confirmar |
+| `sol-006` | **RC6** derivado del proveedor (C1) + confirmación · **RC7** informado (Z030) · OC tras confirmar |
 
 Y las dos comprobaciones que el PRD pide explícitamente: **la idempotencia** (ejecutar `sol-001` dos veces
 seguidas **no** crea una segunda OC) y **una confirmación explícita** (`node demo.ts --confirmar`) para el
@@ -288,20 +290,27 @@ npm test            # sin modelo, sin red y sin claves
 npm run typecheck   # 0 errores, cero any
 ```
 
-| Suite | Qué fija | Fase |
+| Suite | Qué fija | Estado |
 |---|---|---|
-| `paquete.test.ts` | Lectura de los 6 casos y adjunto ausente → `null` con el nombre de lo que falta (HU-1) | F1 |
-| `maestros.test.ts` | Los cuatro maestros: búsqueda por NIT y por nombre normalizado, aprobadores por centro, topes y códigos | F1 |
-| `controles.test.ts` | **RC1–RC10** una por una, con los casos del fixture y con los bordes (2 % exacto, tope justo, ±1 unidad) | F1 |
-| `derivados` · `payload` · `sap` · `control` | Derivaciones de RC6/RC7, esquema del PRD §7.4 con `zod`, simulador (numeración, idempotencia, errores) y log de control | F1 |
+| `normalizacion.test.ts` | NIT con y sin dígito de verificación, forma societaria, fechas sin zonas horarias, importes en tres formatos, moneda y porcentajes | ✅ 12 |
+| `csv.test.ts` | Comas, comillas y saltos **dentro** de un campo: el ida y vuelta no pierde nada | ✅ 7 |
+| `paquete.test.ts` | Los seis casos del fixture, la cotización y la factura con sus números exactos, y el adjunto ausente → `null` + `faltantes` (HU-1) | ✅ 12 |
+| `maestros.test.ts` | Proveedor por NIT y por nombre, aprobadores por centro, códigos y maestro malformado | ✅ 10 |
+| `controles.test.ts` | **RC1–RC10**: el contrato de los seis casos y los bordes (2 % exacto, tope justo, ±1 unidad, aprobación el mismo día) | ✅ 18 |
+| `derivados.test.ts` | RC6 y RC7: qué se deriva del proveedor, qué se pregunta y qué solo se informa; la unidad `H`/`UN` | ✅ 5 |
+| `payload.test.ts` | El contrato del PRD §7.4 validado con `zod`, la huella de la evidencia, el recorte del texto breve y las excepciones firmadas | ✅ 11 |
+| `sap.test.ts` | Numeración correlativa desde `4500000001`, idempotencia por referencia, proveedor inactivo y payload rechazado | ✅ 7 |
+| `control.test.ts` | `out/control.csv`: cabecera, filas anexadas, marca de retroactiva y campos con comas | ✅ 6 |
 | `herramientas.test.ts` | El contrato del PRD §6.2: JSON en ambos caminos, **nunca lanza**, ids raros rechazados, auditoría anti-alucinación | F2 |
 | `demo.test.ts` | Los 6 casos de punta a punta y que repetir la demo no duplica OC | F2 |
 | `bucle.test.ts` | CA1–CA5: topes, confirmación solo con un «sí» explícito, auditoría y error del proveedor sin matar la sesión | F3 |
 | `api.test.ts` · `front-navegador.test.ts` | Las rutas del PRD §6.4 con `inject()` (sin abrir puertos) y `app.js` ejecutándose en un DOM mínimo | F3 · F4 |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las mismas piezas que usa la aplicación | F6 |
 
-Hoy (**F0**) no hay pruebas todavía: el plan completo, suite por suite, está en
-[`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12. Las pruebas escribirán siempre en un
+Estado: **88 pruebas en verde** y `typecheck` con 0 errores, sin modelo, sin red y sin claves; el desglose
+de arriba suma 88. Las pruebas escriben siempre en un `OUT_DIR` temporal, así que **nunca** tocan el `out/`
+del repositorio ni los fixtures. El plan completo, suite por suite, está en
+[`solucion/docs/arquitectura.md`](solucion/docs/arquitectura.md) §12.
 ---
 
 ## 7. Variables de entorno

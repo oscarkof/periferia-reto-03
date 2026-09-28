@@ -115,7 +115,14 @@ commit; el número de la rama **no** lleva el reto (el repositorio ya es del ret
 | Fase | Rama | Qué entrega | Mensajes de commit previstos | Criterio de salida |
 |---|---|---|---|---|
 | **F0** ✅ | `main` | Repositorio, `.gitignore`, `out/.gitkeep`, `.env.example`, `docs/arquitectura.md`, `docs/repo-setup.md`, `README.md` | `chore(baseline): …` · `chore(setup): …` | `git status` limpio y los ignores verificados con `git add -A --dry-run` |
-| **F1** | `f01-core` | `package.json`, `tsconfig.json`, `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia) y `src/sap/` (interfaz + simulado) | `feat(core): lectura del paquete y reglas RC1-RC10` · `feat(sap): adaptador SAP y simulador sobre out/sap` · `feat(core): payload de la OC, evidencia y control` | `npm run typecheck` limpio y las suites de `core` en verde con los **6 casos** y los bordes de cada regla |
+| **F1** ✅ | `f01-core` | `package.json`, `tsconfig.json`, `src/core/` (paquete, maestros, **RC1–RC10**, derivados, payload, evidencia, control) y `src/sap/` (interfaz + simulado) | `feat(core): base del proyecto, lectura del paquete y maestros` · `feat(core): reglas RC1-RC10, derivados y payload validado con zod` · `feat(sap): adaptador y simulador con idempotencia por referencia` | **Cumplido:** `typecheck` en 0 y 88 pruebas en verde |
+
+> **F1 · el orden real de los commits.** Salieron **cuatro**, y no en el orden de arriba: primero las
+> reglas y el payload (`58675a7`), después el SAP simulado (`862e0ca`), la documentación (`003a365`) y al
+> final la base del proyecto (`9b9e8aa`). La base quedó la última por un `git add` mal escrito en el
+> script de la fase; el contenido está completo y el `HEAD` está verde (88 pruebas, `typecheck` en 0). Si
+> prefieres el árbol contado en el orden lógico, es historia local **sin publicar**:
+> `git rebase -i 1a3ed6d` y sube `9b9e8aa` al primer lugar.
 | **F2** | `f02-tools` | `src/tools/oc.ts` (las seis herramientas `zod`) y `demo.ts` | `feat(tools): herramientas oc_* con esquemas zod y contrato {ok,data}` · `feat(demo): los 6 casos sin modelo, con idempotencia y confirmación` | `npm run demo` imprime los 6 casos con su desenlace y `sol-001` dos veces **no** crea dos OC |
 | **F3** | `f03-agente-llm-api` | `src/agent/`, `src/llm/`, `src/server.ts` + `src/server/`, `agent/prompt.md`, `src/knowledge/ordenes-compra.md` | `feat(agent): ciclo del agente, tres proveedores LLM y API con SSE` · `test(agent): confirmación y auditoría` | El prompt del PRD §11 se ejecuta contra el modelo real con las tarjetas en el chat; CA1–CA5 cubiertos por pruebas |
 | **F4** | `f04-web` | `web/` (chat sin build: historial, tarjetas, banda de confirmación, descargas) | `feat(web): front de chat con llamadas visibles y confirmación` | El recorrido de la demo se puede hacer con ratón y el front se prueba ejecutando `app.js` en un DOM mínimo |
