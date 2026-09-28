@@ -395,8 +395,8 @@ reto-03/                              raíz del repo y del entregable (.zip = es
 | `control.test.ts` | El log de control: la fila de `sol-005` queda con `retroactiva = true` |
 | `herramientas.test.ts` | El contrato del PRD §6.2: string JSON en ambos caminos, **no lanza**, ids raros rechazados, caso fuera de `out/` imposible, auditoría anti-alucinación |
 | `demo.test.ts` | El recorrido completo de los 6 casos y que repetirlo no crea OC nuevas |
-| `bucle.test.ts` | El ciclo: topes (CA1), confirmación solo con un «sí» (CA3), auditoría (CA2), error del proveedor (CA5) |
-| `api.test.ts` | Las tres rutas del PRD §6.4 con `inject()`: chat JSON y SSE, sesión persistida, `out/` servido sin escapes, ninguna respuesta con la clave |
+| `bucle.test.ts` | El ciclo: topes (CA1), confirmación solo con un «sí» (CA3), auditoría (CA2), error del proveedor (CA5) | F3 ✅ |
+| `api.test.ts` | Las rutas del PRD §6.4 con `inject()`: chat JSON y SSE, sesión persistida, errores claros y ninguna respuesta con la clave | F3 ✅ |
 | `front-navegador.test.ts` | `web/app.js` ejecutándose en un DOM mínimo contra el backend real |
 | `paridad-modulo.test.ts` | Que `modulo/` siga siendo las **mismas piezas** que usa la aplicación (F6) |
 
